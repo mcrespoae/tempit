@@ -2,7 +2,7 @@ from statistics import mean, median, stdev
 from typing import Callable, Dict, List, Tuple
 
 
-def print_timeit_values(
+def print_tempit_values(
     run_times: int,
     verbose: bool,
     func: Callable,
@@ -12,13 +12,13 @@ def print_timeit_values(
     **kwargs: Dict,
 ) -> None:
     if verbose:
-        print("*" * 5, f"Timeit data for function {func.__name__}:", "*" * 5)
+        print("*" * 5, f"tempit data for function {func.__name__}:", "*" * 5)
     if run_times == 1:
         print_single_value(verbose, func, total_times[0], *args, **kwargs)
     else:
         print_several_values(verbose, func, total_times, real_time, *args, **kwargs)
     if verbose:
-        print("*" * 5, "End of timeit data.", "*" * 5)
+        print("*" * 5, "End of tempit data.", "*" * 5)
 
 
 def print_verbose_common_parts(func: Callable, *args: Tuple, **kwargs: Dict) -> None:

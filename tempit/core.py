@@ -3,14 +3,14 @@ from functools import partial, wraps
 from queue import Queue
 from typing import Any, Callable, Dict, List, Tuple
 
-from .utils import print_timeit_values
+from .utils import print_tempit_values
 
 CONCURRENCY_MODES_AVAILABLE = ["multithreading", "none"]
 
 
-def timeit(*args, run_times: int = 1, concurrency_mode: str = "multithreading", verbose: bool = False) -> Callable:
+def tempit(*args, run_times: int = 1, concurrency_mode: str = "multithreading", verbose: bool = False) -> Callable:
     """
-    Decorator function that measures the execution time of a given function. It can be called like @timeit or using arguments @timeit(...)
+    Decorator function that measures the execution time of a given function. It can be called like @tempit or using arguments @tempit(...)
 
     Args:
         args: contains the function to be decorated if no arguments are provided when calling the decorator
@@ -33,7 +33,7 @@ def timeit(*args, run_times: int = 1, concurrency_mode: str = "multithreading", 
         - If the function is a static method, the first argument will be removed.
 
     Example:
-        @timeit(run_times=5, concurrency_mode="multithreading", verbose=True)
+        @tempit(run_times=5, concurrency_mode="multithreading", verbose=True)
         def my_function(arg1, arg2):
             # function body
 
@@ -45,7 +45,7 @@ def timeit(*args, run_times: int = 1, concurrency_mode: str = "multithreading", 
         func: Callable, run_times: int = 1, concurrency_mode: str = "multithreading", verbose: bool = False
     ) -> Callable:
         @wraps(func)
-        def timeit_wrapper(*args: Tuple, **kwargs: Dict) -> Any:
+        def tempit_wrapper(*args: Tuple, **kwargs: Dict) -> Any:
             validated_concurrency_mode = validate_concurrency_mode(concurrency_mode)
             callable_func, args, args_to_print = extract_callable_and_args_if_method(func, *args)
             result, total_times, real_time = function_execution(
@@ -56,11 +56,11 @@ def timeit(*args, run_times: int = 1, concurrency_mode: str = "multithreading", 
                 **kwargs,
             )
 
-            print_timeit_values(run_times, verbose, callable_func, total_times, real_time, *args_to_print, **kwargs)
+            print_tempit_values(run_times, verbose, callable_func, total_times, real_time, *args_to_print, **kwargs)
 
             return result
 
-        return timeit_wrapper
+        return tempit_wrapper
 
     if args:  # If arguments are not provided, return a decorator
         return decorator(*args, run_times=run_times, concurrency_mode=concurrency_mode, verbose=verbose)
@@ -83,11 +83,11 @@ def function_execution(
     start_time = time.perf_counter()
     if run_times > 1 and concurrency_mode != "none":
         try:
-            result, total_times = timeit_with_concurrency(callable_func, run_times, *args, **kwargs)
+            result, total_times = tempit_with_concurrency(callable_func, run_times, *args, **kwargs)
         except RuntimeError:
-            result, total_times = timeit_main_process(callable_func, run_times, *args, **kwargs)
+            result, total_times = tempit_main_process(callable_func, run_times, *args, **kwargs)
     else:
-        result, total_times = timeit_main_process(callable_func, run_times, *args, **kwargs)
+        result, total_times = tempit_main_process(callable_func, run_times, *args, **kwargs)
     end_time = time.perf_counter()
     real_time = end_time - start_time
 
@@ -111,7 +111,7 @@ def extract_callable_and_args_if_method(func, *args) -> Tuple[Callable, Tuple, T
     return callable_func, args, args_to_print
 
 
-def timeit_main_process(func: Callable, run_times: int, *args: Tuple, **kwargs: Dict) -> Tuple[Any, List[float]]:
+def tempit_main_process(func: Callable, run_times: int, *args: Tuple, **kwargs: Dict) -> Tuple[Any, List[float]]:
 
     total_times: List[float] = []
     for _ in range(run_times):
@@ -125,7 +125,7 @@ def timeit_main_process(func: Callable, run_times: int, *args: Tuple, **kwargs: 
     return result, total_times
 
 
-def timeit_with_concurrency(func: Callable, run_times: int, *args: Tuple, **kwargs: Dict) -> Tuple[Any, List[float]]:
+def tempit_with_concurrency(func: Callable, run_times: int, *args: Tuple, **kwargs: Dict) -> Tuple[Any, List[float]]:
     from concurrent.futures import ThreadPoolExecutor
     from os import cpu_count
 

@@ -3,33 +3,33 @@ import time
 import unittest
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 
-from simple_timeit_decorator.core import timeit
-from simple_timeit_decorator.utils import format_time
+from tempit.core import tempit
+from tempit.utils import format_time
 
 
-class TimeItTestClass:
-    @timeit()
-    def timeit_basic(self):
+class tempitTestClass:
+    @tempit()
+    def tempit_basic(self):
         time.sleep(0.01)
 
-    @timeit
-    def timeit_basic_no_parenthesis(self):
+    @tempit
+    def tempit_basic_no_parenthesis(self):
         time.sleep(0.01)
 
-    @timeit(run_times=5)
-    def test_timeit_with_concurrency(self):
+    @tempit(run_times=5)
+    def test_tempit_with_concurrency(self):
         time.sleep(0.01)
 
-    @timeit(run_times=5, concurrency_mode="none", verbose=False)
-    def test_timeit_no_concurrency(self):
+    @tempit(run_times=5, concurrency_mode="none", verbose=False)
+    def test_tempit_no_concurrency(self):
         time.sleep(0.01)
 
-    @timeit(run_times=5, concurrency_mode="multithreading", verbose=True)
-    def test_timeit_concurrency_verbose(self):
+    @tempit(run_times=5, concurrency_mode="multithreading", verbose=True)
+    def test_tempit_concurrency_verbose(self):
         time.sleep(0.01)
 
-    @timeit(run_times=10, concurrency_mode="multithreading", verbose=True)
-    def test_timeit_multithreading_crash(self):
+    @tempit(run_times=10, concurrency_mode="multithreading", verbose=True)
+    def test_tempit_multithreading_crash(self):
         current_thread = threading.current_thread()
         if current_thread.name != "MainThread":
             raise RuntimeError("Crashing intentionally for testing multithreading inside a class")
@@ -38,30 +38,30 @@ class TimeItTestClass:
     def sum(self, a: int = 1, b: int = 2):
         return a + b
 
-    @timeit(run_times=10)
-    def test_timeit_args(self, a: int = 1, b: int = 2):
+    @tempit(run_times=10)
+    def test_tempit_args(self, a: int = 1, b: int = 2):
         return self.sum(a, b)
 
-    @timeit(run_times=2)
+    @tempit(run_times=2)
     @staticmethod
     def static_method(a: int = 1, b: int = 2):
         return a + b
 
-    @timeit(run_times=2, verbose=True)
+    @tempit(run_times=2, verbose=True)
     @classmethod
     def class_method(cls, a: int = 1, b: int = 2):
         return cls.__name__, a + b
 
-    @timeit(run_times=2, verbose=True)
+    @tempit(run_times=2, verbose=True)
     @classmethod
     def class_method_no_args(cls):
         return cls.__name__, 1 + 2
 
 
-class TestTimeitDecoratorFunction(unittest.TestCase):
+class TesttempitDecoratorFunction(unittest.TestCase):
 
-    def test_timeit_basic(self):
-        @timeit()
+    def test_tempit_basic(self):
+        @tempit()
         def my_function():
             time.sleep(0.01)
 
@@ -72,8 +72,8 @@ class TestTimeitDecoratorFunction(unittest.TestCase):
         execution_time = end_time - start_time
         self.assertAlmostEqual(execution_time, 0.01, delta=0.01)
 
-    def test_timeit_basic_no_parenthesis(self):
-        @timeit
+    def test_tempit_basic_no_parenthesis(self):
+        @tempit
         def my_function():
             time.sleep(0.01)
 
@@ -84,8 +84,8 @@ class TestTimeitDecoratorFunction(unittest.TestCase):
         execution_time = end_time - start_time
         self.assertAlmostEqual(execution_time, 0.01, delta=0.01)
 
-    def test_timeit_with_concurrency(self):
-        @timeit(run_times=5, concurrency_mode="multithreading")
+    def test_tempit_with_concurrency(self):
+        @tempit(run_times=5, concurrency_mode="multithreading")
         def my_function():
             time.sleep(0.01)
 
@@ -96,8 +96,8 @@ class TestTimeitDecoratorFunction(unittest.TestCase):
         execution_time = end_time - start_time
         self.assertAlmostEqual(execution_time, 0.01, delta=0.1)  # Check if execution time is close to 0.1 seconds
 
-    def test_timeit_no_concurrency(self):
-        @timeit(run_times=5, concurrency_mode="none")
+    def test_tempit_no_concurrency(self):
+        @tempit(run_times=5, concurrency_mode="none")
         def my_function():
             time.sleep(0.01)
 
@@ -108,9 +108,9 @@ class TestTimeitDecoratorFunction(unittest.TestCase):
         execution_time = end_time - start_time
         self.assertAlmostEqual(execution_time, 0.05, delta=0.1)
 
-    def test_timeit_multithreading_verbose(self):
+    def test_tempit_multithreading_verbose(self):
         # Just check it doesn't crash
-        @timeit(run_times=5, concurrency_mode="multithreading", verbose=True)
+        @tempit(run_times=5, concurrency_mode="multithreading", verbose=True)
         def my_function():
             time.sleep(0.01)
 
@@ -121,9 +121,9 @@ class TestTimeitDecoratorFunction(unittest.TestCase):
         execution_time = end_time - start_time
         self.assertAlmostEqual(execution_time, 0.01, delta=0.1)
 
-    def test_timeit_multithreading_crash(self):
+    def test_tempit_multithreading_crash(self):
         # Just check if it the multihreading doesn't work, it should be executed in the main thread
-        @timeit(run_times=5, concurrency_mode="multithreading")
+        @tempit(run_times=5, concurrency_mode="multithreading")
         def my_function():
             current_thread = threading.current_thread()
             if current_thread.name != "MainThread":
@@ -137,8 +137,8 @@ class TestTimeitDecoratorFunction(unittest.TestCase):
         execution_time = end_time - start_time
         self.assertAlmostEqual(execution_time, 0.05, delta=0.1)
 
-    def test_timeit_args(self):
-        @timeit(run_times=2, concurrency_mode="multithreading", verbose=True)
+    def test_tempit_args(self):
+        @tempit(run_times=2, concurrency_mode="multithreading", verbose=True)
         def my_function(a: int = 1, b: int = 2):
             return a + b
 
@@ -151,7 +151,7 @@ class TestTimeitDecoratorFunction(unittest.TestCase):
         self.assertEqual(result, 3)
 
     def test_run_from_other_thread(self):
-        @timeit(run_times=2, concurrency_mode="multithreading", verbose=True)
+        @tempit(run_times=2, concurrency_mode="multithreading", verbose=True)
         def my_function(a: int = 1, b: int = 2):
             return a + b
 
@@ -169,114 +169,114 @@ class TestTimeitDecoratorFunction(unittest.TestCase):
         self.assertEqual(result, 3)
 
 
-class TestTimeitDecoratorClass(unittest.TestCase):
+class TesttempitDecoratorClass(unittest.TestCase):
     def setUp(self):
-        self.test_class = TimeItTestClass()
+        self.test_class = tempitTestClass()
 
-    def test_timeit_basic(self):
+    def test_tempit_basic(self):
 
         start_time = time.time()
-        self.test_class.timeit_basic()
+        self.test_class.tempit_basic()
         end_time = time.time()
 
         execution_time = end_time - start_time
         self.assertAlmostEqual(execution_time, 0.01, delta=0.01)
 
-    def test_timeit_basic_no_parenthesis(self):
+    def test_tempit_basic_no_parenthesis(self):
 
         start_time = time.time()
-        self.test_class.timeit_basic_no_parenthesis()
+        self.test_class.tempit_basic_no_parenthesis()
         end_time = time.time()
 
         execution_time = end_time - start_time
         self.assertAlmostEqual(execution_time, 0.01, delta=0.01)
 
-    def test_timeit_with_concurrency(self):
+    def test_tempit_with_concurrency(self):
 
         start_time = time.time()
-        self.test_class.test_timeit_with_concurrency()
+        self.test_class.test_tempit_with_concurrency()
         end_time = time.time()
 
         execution_time = end_time - start_time
         self.assertAlmostEqual(execution_time, 0.01, delta=0.1)
 
-    def test_timeit_no_concurrency(self):
+    def test_tempit_no_concurrency(self):
         start_time = time.time()
-        self.test_class.test_timeit_no_concurrency()
+        self.test_class.test_tempit_no_concurrency()
         end_time = time.time()
 
         execution_time = end_time - start_time
         self.assertAlmostEqual(execution_time, 0.05, delta=0.1)
 
-    def test_timeit_concurrency_verbose(self):
+    def test_tempit_concurrency_verbose(self):
         # Just check it doesn't crash
         start_time = time.time()
-        self.test_class.test_timeit_concurrency_verbose()
+        self.test_class.test_tempit_concurrency_verbose()
         end_time = time.time()
 
         execution_time = end_time - start_time
         self.assertAlmostEqual(execution_time, 0.01, delta=0.1)
 
-    def test_timeit_multithreading_crash(self):
+    def test_tempit_multithreading_crash(self):
         # Just check if it the multihreading doesn't work, it should be executed in the main thread
         start_time = time.time()
-        self.test_class.test_timeit_concurrency_verbose()
+        self.test_class.test_tempit_concurrency_verbose()
         end_time = time.time()
 
         execution_time = end_time - start_time
         self.assertAlmostEqual(execution_time, 0.05, delta=0.1)
 
-    def test_timeit_args(self):
-        result = self.test_class.test_timeit_args(1, b=2)
+    def test_tempit_args(self):
+        result = self.test_class.test_tempit_args(1, b=2)
         self.assertEqual(result, 3)
 
-    def test_timeit_static_method(self):
+    def test_tempit_static_method(self):
         result = self.test_class.static_method(1, b=2)
         self.assertEqual(result, 3)
 
-    def test_timeit_class_method(self):
+    def test_tempit_class_method(self):
         class_name, result = self.test_class.class_method(1, b=2)
-        self.assertEqual(class_name, "TimeItTestClass")
+        self.assertEqual(class_name, "tempitTestClass")
         self.assertEqual(result, 3)
 
-    def test_timeit_run_from_other_thread(self):
+    def test_tempit_run_from_other_thread(self):
         with ThreadPoolExecutor(max_workers=1) as executor:
-            future = executor.submit(self.test_class.test_timeit_args, 1, b=2)
+            future = executor.submit(self.test_class.test_tempit_args, 1, b=2)
             result = future.result()
 
         self.assertEqual(result, 3)
 
-    def test_timeit_run_from_other_process(self):
+    def test_tempit_run_from_other_process(self):
         with ProcessPoolExecutor(max_workers=1) as executor:
-            future = executor.submit(self.test_class.test_timeit_args, 1, b=2)
+            future = executor.submit(self.test_class.test_tempit_args, 1, b=2)
             result = future.result()
 
         self.assertEqual(result, 3)
 
-    def test_timeit_class_method_from_other_thread(self):
+    def test_tempit_class_method_from_other_thread(self):
         with ThreadPoolExecutor(max_workers=1) as executor:
             future = executor.submit(self.test_class.class_method, 1, b=2)
             class_name, result = future.result()
 
-        self.assertEqual(class_name, "TimeItTestClass")
+        self.assertEqual(class_name, "tempitTestClass")
         self.assertEqual(result, 3)
 
-    def test_timeit_class_method_run_from_other_process(self):
+    def test_tempit_class_method_run_from_other_process(self):
         with ProcessPoolExecutor(max_workers=1) as executor:
             future = executor.submit(self.test_class.class_method, 2, b=6)
             class_name, result = future.result()
 
-        self.assertEqual(class_name, "TimeItTestClass")
+        self.assertEqual(class_name, "tempitTestClass")
         self.assertEqual(result, 8)
 
-    def test_timeit_static_method_from_other_thread(self):
+    def test_tempit_static_method_from_other_thread(self):
         with ThreadPoolExecutor(max_workers=1) as executor:
             future = executor.submit(self.test_class.static_method, 4, b=5)
             result = future.result()
 
         self.assertEqual(result, 9)
 
-    def test_timeit_static_method_run_from_other_process(self):
+    def test_tempit_static_method_run_from_other_process(self):
         with ProcessPoolExecutor(max_workers=1) as executor:
             future = executor.submit(self.test_class.static_method, 1, b=2)
             result = future.result()
@@ -285,7 +285,7 @@ class TestTimeitDecoratorClass(unittest.TestCase):
 
 
 # Added here since calling a function from another process inside a test method doesn't work
-@timeit(run_times=2, concurrency_mode="multithreading", verbose=True)
+@tempit(run_times=2, concurrency_mode="multithreading", verbose=True)
 def my_process_function(a: int = 1, b: int = 2):
     return a + b
 
