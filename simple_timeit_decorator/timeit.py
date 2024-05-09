@@ -54,6 +54,9 @@ def timeit_main_process(func, run_times, *args, **kwargs):
 
 def timeit_with_threads(func, args, kwargs, is_instance_method, exception_queue, run_times):
     from concurrent.futures import ThreadPoolExecutor
+    from os import cpu_count
+
+    workers = max(2, cpu_count() - 2) if cpu_count() is not None else 2  # type: ignore
 
     def run_func(func, args, kwargs, is_instance_method, exception_queue):
         start_time = time.perf_counter()
@@ -71,7 +74,7 @@ def timeit_with_threads(func, args, kwargs, is_instance_method, exception_queue,
             return result, end_time - start_time
 
     total_times = []
-    with ThreadPoolExecutor() as executor:
+    with ThreadPoolExecutor(max_workers=workers) as executor:
         future_tasks = [
             executor.submit(run_func, func, args, kwargs, is_instance_method, exception_queue) for _ in range(run_times)
         ]

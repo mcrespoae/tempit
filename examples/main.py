@@ -31,6 +31,18 @@ class TimeItTestClass:
             raise RuntimeError("Crashing intentionally for testing multithreading inside a class")
         time.sleep(0.1)
 
+    def sum(self, a: int = 1, b: int = 2):
+        return a + b
+
+    @timeit(run_times=10)
+    def complex_method(self, a: int = 1, b: int = 2):
+        return self.sum(a, b)
+
+    @timeit()
+    @staticmethod
+    def static_method():
+        return 1 + 2
+
 
 @timeit()
 def timeit_basic_tenth_second():
@@ -93,6 +105,20 @@ def main():
 
     print("Multithreading crash non class")
     timeit_10times_multithreading_crash()
+
+    print("Complex method with args")
+    result = test_class.complex_method(1, 2)
+    if result != 3:
+        raise RuntimeError("Result is not 3")
+    else:
+        print("Result is 3")
+
+    print("Static method")
+    result = test_class.static_method()
+    if result != 3:
+        raise RuntimeError("Result is not 3")
+    else:
+        print("Result is 3")
 
 
 if __name__ == "__main__":
