@@ -7,7 +7,7 @@ from tempit.core import tempit
 from tempit.utils import format_time
 
 
-class tempitTestClass:
+class TempitTestClass:
     @tempit()
     def tempit_basic(self):
         time.sleep(0.01)
@@ -58,7 +58,7 @@ class tempitTestClass:
         return cls.__name__, 1 + 2
 
 
-class TesttempitDecoratorFunction(unittest.TestCase):
+class TestTempitDecoratorFunction(unittest.TestCase):
 
     def test_tempit_basic(self):
         @tempit()
@@ -169,9 +169,9 @@ class TesttempitDecoratorFunction(unittest.TestCase):
         self.assertEqual(result, 3)
 
 
-class TesttempitDecoratorClass(unittest.TestCase):
+class TestTempitDecoratorClass(unittest.TestCase):
     def setUp(self):
-        self.test_class = tempitTestClass()
+        self.test_class = TempitTestClass()
 
     def test_tempit_basic(self):
 
@@ -236,7 +236,7 @@ class TesttempitDecoratorClass(unittest.TestCase):
 
     def test_tempit_class_method(self):
         class_name, result = self.test_class.class_method(1, b=2)
-        self.assertEqual(class_name, "tempitTestClass")
+        self.assertEqual(class_name, "TempitTestClass")
         self.assertEqual(result, 3)
 
     def test_tempit_run_from_other_thread(self):
@@ -258,7 +258,7 @@ class TesttempitDecoratorClass(unittest.TestCase):
             future = executor.submit(self.test_class.class_method, 1, b=2)
             class_name, result = future.result()
 
-        self.assertEqual(class_name, "tempitTestClass")
+        self.assertEqual(class_name, "TempitTestClass")
         self.assertEqual(result, 3)
 
     def test_tempit_class_method_run_from_other_process(self):
@@ -266,7 +266,7 @@ class TesttempitDecoratorClass(unittest.TestCase):
             future = executor.submit(self.test_class.class_method, 2, b=6)
             class_name, result = future.result()
 
-        self.assertEqual(class_name, "tempitTestClass")
+        self.assertEqual(class_name, "TempitTestClass")
         self.assertEqual(result, 8)
 
     def test_tempit_static_method_from_other_thread(self):
