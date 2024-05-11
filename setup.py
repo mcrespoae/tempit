@@ -1,6 +1,6 @@
 from setuptools import setup
 
-VERSION = "0.1.0"
+VERSION = "0.1.1"
 setup(
     name="tempit",
     version=VERSION,
@@ -10,11 +10,12 @@ setup(
     description="A dead simple time decorator",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
-    url="https://github.com/mcrespoae/simple_tempit_decorator",
+    url="https://github.com/mcrespoae/tempit",
     install_requires=[],
     python_requires=">=3.8",
     keywords=["tempit", "time", "decorator", "performance", "multithreading", "benchmark"],
     classifiers=[
+        "Development Status :: 5 - Production/Stable",
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",

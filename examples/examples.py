@@ -1,9 +1,7 @@
-import sys
 import threading
 import time
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 
-sys.path.append("../")
 from tempit import tempit
 
 
