@@ -12,16 +12,22 @@ else
 
 endif
 
-.PHONY: build example test
+.PHONY: build install example test check clean upload_pypi
 
 build:
 	$(PYTHON) setup.py sdist bdist_wheel
+
+install:
+	$(PYTHON) setup.py install
+
 example:
-	cd examples & $(PYTHON) examples.py
+ifeq ($(OS),Windows_NT)
+	$(PYTHON) examples/examples.py
+else
+	$(PYTHON) "examples/examples.py"
+endif
 test:
 	$(PYTHON) -m unittest discover -v -s ./tests -p "*test*.py"
-test-pkg:
-	$(PYTHON) setup.py test
 check:
 	$(PYTHON) setup.py check
 
@@ -35,5 +41,8 @@ else
 	$(RMDIR) dist
 	$(RMDIR) tempit.egg-info
 endif
+
+upload_pypi: clean check build
+	$(PYTHON) -m twine upload dist/*
 
 
