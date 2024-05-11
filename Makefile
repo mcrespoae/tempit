@@ -12,8 +12,28 @@ else
 
 endif
 
-.PHONY: test
-run:
-	$(PYTHON) examples/main.py
+.PHONY: build example test
+
+build:
+	$(PYTHON) setup.py sdist bdist_wheel
+example:
+	cd examples & $(PYTHON) examples.py
 test:
 	$(PYTHON) -m unittest discover -v -s ./tests -p "*test*.py"
+test-pkg:
+	$(PYTHON) setup.py test
+check:
+	$(PYTHON) setup.py check
+
+clean:
+ifeq ($(OS),Windows_NT)
+	if exist build $(RMDIR) build
+	if exist dist $(RMDIR) dist
+	if exist tempit.egg-info $(RMDIR) tempit.egg-info
+else
+	$(RMDIR) build
+	$(RMDIR) dist
+	$(RMDIR) tempit.egg-info
+endif
+
+

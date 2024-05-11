@@ -8,7 +8,7 @@ from .utils import print_tempit_values
 CONCURRENCY_MODES_AVAILABLE = ["multithreading", "none"]
 
 
-def tempit(*args, run_times: int = 1, concurrency_mode: str = "multithreading", verbose: bool = False) -> Callable:
+def tempit(*args: Any, run_times: int = 1, concurrency_mode: str = "multithreading", verbose: bool = False) -> Callable:
     """
     Decorator function that measures the execution time of a given function. It can be called like @tempit or using arguments @tempit(...)
 
@@ -34,6 +34,10 @@ def tempit(*args, run_times: int = 1, concurrency_mode: str = "multithreading", 
 
     Example:
         @tempit(run_times=5, concurrency_mode="multithreading", verbose=True)
+        def my_function(arg1, arg2):
+            # function body
+
+        @tempit
         def my_function(arg1, arg2):
             # function body
 
@@ -70,14 +74,58 @@ def tempit(*args, run_times: int = 1, concurrency_mode: str = "multithreading", 
 
 
 def validate_concurrency_mode(concurrency_mode: str) -> str:
-    """Validate and normalize the concurrency mode."""
+    """
+    Validates and normalizes the concurrency mode.
+    Args:
+        concurrency_mode (str): The concurrency mode to validate.
+    Returns:
+        str: The normalized concurrency mode if it is valid, otherwise "multithreading".
+    """
     return concurrency_mode.lower() if concurrency_mode.lower() in CONCURRENCY_MODES_AVAILABLE else "multithreading"
+
+
+def extract_callable_and_args_if_method(func, *args) -> Tuple[Callable, Tuple, Tuple]:
+    """
+    Extracts the callable function and arguments from a given function, if it is a method.
+    Args:
+        func (Callable): The function to extract the callable from.
+        args: Variable length argument list.
+    Returns:
+        Tuple[Callable, Tuple, Tuple]: A tuple containing the extracted callable function, the modified arguments,
+        and the arguments to be printed.
+    Raises:
+        None
+    """
+    callable_func = func
+    args_to_print = args
+
+    is_method = hasattr(args[0], func.__name__) if args else False
+    if is_method:
+        args_to_print = args[1:]
+        if isinstance(func, classmethod):
+            args = (args[0].__class__,) + args[1:]  # type: ignore
+            callable_func = func.__func__
+        elif isinstance(func, staticmethod):
+            args = args[1:]
+
+    return callable_func, args, args_to_print
 
 
 def function_execution(
     callable_func: Callable, run_times: int, concurrency_mode: str, *args: Tuple, **kwargs: Dict
 ) -> Tuple[Any, List[float], float]:
-    """Measure the execution time of a function."""
+    """
+    Run and measure the execution time of a function. It also returns the value of the function return and the execution times.
+    Args:
+        callable_func (Callable): The function to be executed.
+        run_times (int): The number of times the function should be executed.
+        concurrency_mode (str): The concurrency mode for executing the function.
+        *args (Tuple): The positional arguments to be passed to the function.
+        **kwargs (Dict): The keyword arguments to be passed to the function.
+    Returns:
+        Tuple[Any, List[float], float]: A tuple containing the result of the function,
+        a list of execution times for each run, and the total real time taken.
+    """
     if run_times < 1:
         run_times = 1
     start_time = time.perf_counter()
@@ -94,24 +142,17 @@ def function_execution(
     return result, total_times, real_time
 
 
-def extract_callable_and_args_if_method(func, *args) -> Tuple[Callable, Tuple, Tuple]:
-    """Extract the callable function and arguments."""
-    callable_func = func
-    args_to_print = args
-
-    is_method = hasattr(args[0], func.__name__) if args else False
-    if is_method:
-        args_to_print = args[1:]
-        if isinstance(func, classmethod):
-            args = (args[0].__class__,) + args[1:]  # type: ignore
-            callable_func = func.__func__
-        elif isinstance(func, staticmethod):
-            args = args[1:]
-
-    return callable_func, args, args_to_print
-
-
 def tempit_main_process(func: Callable, run_times: int, *args: Tuple, **kwargs: Dict) -> Tuple[Any, List[float]]:
+    """
+    Run and measure the execution time of a function in the main process. It also returns the value of the function return and the execution times.
+    Args:
+        func (Callable): The function to be executed.
+        run_times (int): The number of times the function should be executed.
+        *args (Tuple): The positional arguments to be passed to the function.
+        **kwargs (Dict): The keyword arguments to be passed to the function.
+    Returns:
+        Tuple[Any, List[float]]: A tuple containing the result of the function and a list of execution times for each run.
+    """
 
     total_times: List[float] = []
     for _ in range(run_times):
@@ -126,6 +167,20 @@ def tempit_main_process(func: Callable, run_times: int, *args: Tuple, **kwargs: 
 
 
 def tempit_with_concurrency(func: Callable, run_times: int, *args: Tuple, **kwargs: Dict) -> Tuple[Any, List[float]]:
+    """
+    Executes a given function concurrently a specified number of times using a thread pool executor.
+
+    Args:
+        func (Callable): The function to be executed.
+        run_times (int): The number of times the function should be executed.
+        *args (Tuple): The positional arguments to be passed to the function.
+        **kwargs (Dict): The keyword arguments to be passed to the function.
+
+    Returns:
+        Tuple[Any, List[float]]: A tuple containing the result of the function and a list of execution times for each run.
+        If an exception was raised in one of the threads, the function will raise a RuntimeError and execute the function
+        in the main process non-concurrently.
+    """
     from concurrent.futures import ThreadPoolExecutor
     from os import cpu_count
 

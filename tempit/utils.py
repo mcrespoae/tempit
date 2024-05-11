@@ -11,6 +11,19 @@ def print_tempit_values(
     *args: Tuple,
     **kwargs: Dict,
 ) -> None:
+    """
+    Print the tempit values for a given function.
+    Args:
+        run_times (int): The number of times the function was executed.
+        verbose (bool): Whether to print verbose information.
+        func (Callable): The function to print the values for.
+        total_times (List[float]): The total execution times for each run of the function.
+        real_time (float): The real time taken to execute the function.
+        *args (Tuple): Additional positional arguments to pass to the function.
+        **kwargs (Dict): Additional keyword arguments to pass to the function.
+    Returns:
+        None
+    """
     if verbose:
         print("*" * 5, f"tempit data for function {func.__name__}:", "*" * 5)
     if run_times == 1:
@@ -22,7 +35,15 @@ def print_tempit_values(
 
 
 def print_verbose_common_parts(func: Callable, *args: Tuple, **kwargs: Dict) -> None:
-
+    """
+    Print the tempti verbose common parts of a function.
+    Args:
+        func (Callable): The function to print the common parts for.
+        *args (Tuple): Additional positional arguments.
+        **kwargs (Dict): Additional keyword arguments.
+    Returns:
+        None
+    """
     print(f"Function name: {func.__name__}")
     print(f"\tFuncion object: {func}")
     print(f"\tArgs: {args}")
@@ -30,6 +51,17 @@ def print_verbose_common_parts(func: Callable, *args: Tuple, **kwargs: Dict) -> 
 
 
 def print_single_value(verbose: bool, func: Callable, total_time: float, *args: Tuple, **kwargs: Dict) -> None:
+    """
+    Print a single value based on the given parameters.
+    Args:
+        verbose (bool): Whether to print verbose information.
+        func (Callable): The function to print the value for.
+        total_time (float): The total execution time of the function.
+        *args (Tuple): Additional positional arguments.
+        **kwargs (Dict): Additional keyword arguments.
+    Returns:
+        None
+    """
     if verbose:
         print_verbose_common_parts(func, *args, **kwargs)
         print(f"\tTime: {format_time(total_time)}.")
@@ -40,7 +72,18 @@ def print_single_value(verbose: bool, func: Callable, total_time: float, *args: 
 def print_several_values(
     verbose: bool, func: Callable, total_times: List[float], real_time: float, *args: Tuple, **kwargs: Dict
 ) -> None:
-    # Get statistics like mean, std, min, max, etc. from the total_times list
+    """
+    Print several values based on the given parameters.
+    Args:
+        verbose (bool): Whether to print verbose information.
+        func (Callable): The function to print the values for.
+        total_times (List[float]): The total execution times for each run of the function.
+        real_time (float): The real time taken to execute the function.
+        *args (Tuple): Additional positional arguments.
+        **kwargs (Dict): Additional keyword arguments.
+    Returns:
+        None
+    """
     avg_time = mean(total_times)
 
     if verbose:
@@ -63,6 +106,13 @@ def print_several_values(
 
 
 def format_time(total_time: float) -> str:
+    """
+    Formats the given total time into a human-readable string representation.
+    Args:
+        total_time (float): The total time to be formatted.
+    Returns:
+        str: The formatted time string.
+    """
     if total_time < 0.001:
         microseconds = total_time * 1_000_000
         return f"{microseconds:.4f}µs"

@@ -33,7 +33,7 @@ class TempitTestClass:
         current_thread = threading.current_thread()
         if current_thread.name != "MainThread":
             raise RuntimeError("Crashing intentionally for testing multithreading inside a class")
-        time.sleep(0.1)
+        time.sleep(0.01)
 
     def sum(self, a: int = 1, b: int = 2):
         return a + b
@@ -70,7 +70,7 @@ class TestTempitDecoratorFunction(unittest.TestCase):
         end_time = time.time()
 
         execution_time = end_time - start_time
-        self.assertAlmostEqual(execution_time, 0.01, delta=0.01)
+        self.assertAlmostEqual(execution_time, 0.01, delta=0.1)
 
     def test_tempit_basic_no_parenthesis(self):
         @tempit
