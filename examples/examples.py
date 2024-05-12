@@ -1,6 +1,8 @@
+import sys
 import threading
 import time
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
+from multiprocessing import current_process
 
 from tempit import tempit
 
@@ -18,16 +20,17 @@ class TempitTestClass:
     def tempit_5times_verbose(self):
         time.sleep(0.01)
 
-    @tempit(run_times=5, concurrency_mode="none", verbose=True)
-    def tempit_5times_lineal_verbose(self):
+    @tempit(run_times=5, concurrent_execution=False, verbose=True)
+    def tempit_5times_sequential_verbose(self):
         time.sleep(0.01)
 
     @tempit(run_times=5, verbose=True)
-    def tempit_5times_multithreading_crash(self):
-        current_thread = threading.current_thread()
-        if current_thread.name != "MainThread":
-            raise RuntimeError("Crashing intentionally for testing multithreading inside a class")
-        time.sleep(0.01)
+    def tempit_5times_multithreading_crash(self, a: int = 1, b: int = 2):
+        current_thread_name = threading.current_thread().name
+        current_process_name = current_process().name
+        if current_thread_name != "MainThread" or current_process_name != "MainProcess":
+            raise RuntimeError("Crashing intentionally for testing multithreading or multiprocessing inside a class")
+        return a + b
 
     def sum(self, a: int = 1, b: int = 2):
         return a + b
@@ -57,25 +60,26 @@ def tempit_5times():
     time.sleep(0.01)
 
 
-@tempit(run_times=5, concurrency_mode="multithreading", verbose=True)
+@tempit(run_times=5, concurrent_execution=True, verbose=True)
 def tempit_5times_verbose():
     time.sleep(0.01)
 
 
-@tempit(run_times=5, concurrency_mode="none", verbose=True)
-def tempit_5times_lineal_verbose():
+@tempit(run_times=5, concurrent_execution=False, verbose=True)
+def tempit_5times_sequential_verbose():
     time.sleep(0.01)
 
 
-@tempit(run_times=5, concurrency_mode="multithreading", verbose=False)
+@tempit(run_times=5, concurrent_execution=True, verbose=False)
 def tempit_5times_multithreading_crash():
-    current_thread = threading.current_thread()
-    if current_thread.name != "MainThread":
+    current_thread_name = threading.current_thread().name
+    current_process_name = current_process().name
+    if current_thread_name != "MainThread" or current_process_name != "MainProcess":
         raise RuntimeError("Crashing intentionally for testing multithreading outside class")
     time.sleep(0.01)
 
 
-@tempit(run_times=5, concurrency_mode="multithreading", verbose=True)
+@tempit(run_times=5, concurrent_execution=True, verbose=True)
 def args_func(a: int = 1, b: int = 2):
     return a + b
 
@@ -90,9 +94,31 @@ def tempit_other_process(a: int = 1, b: int = 2):
     return a + b
 
 
+@tempit(run_times=5, concurrent_execution=True, verbose=True)
+def call_long_process_concurrent(n):
+    for _ in range(20_000_000):
+        pass  #
+    return fib(n)
+
+
+@tempit(run_times=5, concurrent_execution=False, verbose=True)
+def call_long_process_sequential(n):
+    for _ in range(20_000_000):
+        pass  #
+    return fib(n)
+
+
+def fib(n):
+    if n < 2:
+        return n
+    return fib(n - 2) + fib(n - 1)
+
+
 @tempit
 def main():
+
     test_class = TempitTestClass()
+
     print("---CLASS EXAMPLES---")
 
     print("Once in class basic")
@@ -102,10 +128,12 @@ def main():
     print("Concurrency 5 times in class verbose")
     test_class.tempit_5times_verbose()
     print("Non concurrent 5 times in class verbose")
-    test_class.tempit_5times_lineal_verbose()
+    test_class.tempit_5times_sequential_verbose()
+
     print("Multithreading crash in class")
-    # If crash while running in a separate thread, the execution will be done in the main thread not concurrently
-    test_class.tempit_5times_multithreading_crash()
+    # If crash while running in a separate thread or process, the execution will be done in the main thread not concurrently
+    _ = test_class.tempit_5times_multithreading_crash(1, b=2)
+
     print("Method with args")
     _ = test_class.args_method(1, b=2)
     print("Static method")
@@ -141,7 +169,7 @@ def main():
     print("Concurrency 5 times verbose")
     tempit_5times_verbose()
     print("Non concurrent 5 times verbose")
-    tempit_5times_lineal_verbose()
+    tempit_5times_sequential_verbose()
     print("Multithreading crash non class")
     # If crash while running in a separate thread, the execution will be done in the main thread not concurrently
     tempit_5times_multithreading_crash()
@@ -162,6 +190,12 @@ def main():
         future_basic_func.result()
         future_args_func = executor.submit(args_func, 1, b=2)
         _ = future_args_func.result()
+
+    print("---END FUNCTION EXAMPLES---")
+    print("---OTHER EXAMPLES---")
+    _ = call_long_process_concurrent(32)
+    _ = call_long_process_sequential(32)
+    print("---END OTHER EXAMPLES---")
 
 
 if __name__ == "__main__":

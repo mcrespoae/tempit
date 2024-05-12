@@ -37,7 +37,7 @@ Function my_function took 10.5908ms.
 
 ```python
 from tempit import tempit
-@tempit(run_times=20, concurrency_mode="multithreading", verbose=True)
+@tempit(run_times=20, concurrent_execution=True, verbose=True)
 def my_function_with_args(a:int = 1, b:int = 2):
     return a + b
 
@@ -70,7 +70,7 @@ More examples can be found in the [examples.py](examples/examples.py) script.
 - Simplified usage.
 - Accurate measurement of function execution time.
 - Support for `classmethod` and `staticmethods`.
-- Multithreading mode for performance measurement.
+- Parallel execution mode for performance measurement.
 - Human-readable time formatting.
 - Optional verbose mode for detailed information.
 
@@ -79,7 +79,7 @@ More examples can be found in the [examples.py](examples/examples.py) script.
 Using the decorator @tempit without any parameters executes the function once and displays the execution time. However, you can enhance the experience using the following arguments:
 
 - `run_times` (int, optional): Specifies the number of function executions. Defaults to 1.
-- `concurrency_mode` (str, optional): Determines the concurrency mode for function execution. Options are "multithreading" and "none". Defaults to "multithreading".
+- `concurrency_mode` (bool, optional): Determines the concurrency mode for the function execution. It uses [joblib](https://pypi.org/project/joblib/) for parallel computing. The  default execution backend is "loky" but if the function is being triggered other than the main thread or main process, the backend will be changed to multithreading to aovid pickle errors. If, for any other reason, fails, the program will try to execute the func run_times non concurrently in the main process. Defaults to True.
 - `verbose` (bool, optional): Controls whether detailed information is printed after execution. Defaults to False.
 
 ## Contributing

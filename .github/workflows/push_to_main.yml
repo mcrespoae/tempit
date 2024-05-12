@@ -6,8 +6,10 @@ name: Python push to main - Run test and lint
 on:
   push:
     branches: [ "main" ]
+    paths: tempit/**.py
   pull_request:
     branches: [ "main" ]
+    paths: tempit/**.py
 
 jobs:
     build:

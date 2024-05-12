@@ -1,0 +1,45 @@
+{
+    "_meta": {
+        "hash": {
+            "sha256": "2536bebacd186d0b0e9666616d800051e963e20996c029ffcd974b1d68101033"
+        },
+        "pipfile-spec": 6,
+        "requires": {
+            "python_version": "3.12"
+        },
+        "sources": [
+            {
+                "name": "pypi",
+                "url": "https://pypi.org/simple",
+                "verify_ssl": true
+            }
+        ]
+    },
+    "default": {
+        "joblib": {
+            "hashes": [
+                "sha256:06d478d5674cbc267e7496a410ee875abd68e4340feff4490bcb7afb88060ae6",
+                "sha256:2382c5816b2636fbd20a09e0f4e9dad4736765fdfb7dca582943b9c1366b3f0e"
+            ],
+            "index": "pypi",
+            "markers": "python_version >= '3.8'",
+            "version": "==1.4.2"
+        },
+        "tempit": {
+            "editable": true,
+            "file": ".",
+            "markers": "python_version >= '3.8'"
+        }
+    },
+    "develop": {
+        "setuptools": {
+            "hashes": [
+                "sha256:6c1fccdac05a97e598fb0ae3bbed5904ccb317337a51139dcd51453611bbb987",
+                "sha256:c636ac361bc47580504644275c9ad802c50415c7522212252c033bd15f301f32"
+            ],
+            "index": "pypi",
+            "markers": "python_version >= '3.8'",
+            "version": "==69.5.1"
+        }
+    }
+}
