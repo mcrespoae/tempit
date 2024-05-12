@@ -31,7 +31,7 @@ def tempit(*args: Any, run_times: int = 1, concurrent_execution: bool = True, ve
         - If the function is a static method, the first argument will be removed.
 
     Example:
-        @tempit(run_times=5, concurrent_execution="multithreading", verbose=True)
+        @tempit(run_times=5, concurrent_execution=True, verbose=True)
         def my_function(arg1, arg2):
             # function body
 
