@@ -42,13 +42,13 @@ ifeq ($(OS),Windows_NT)
 	if exist build $(RMDIR) build
 	if exist dist $(RMDIR) dist
 	if exist tempit.egg-info $(RMDIR) tempit.egg-info
-	pipenv --rm
+	if exist .venv $(RMDIR) .venv
 
 else
 	$(RMDIR) build
 	$(RMDIR) dist
 	$(RMDIR) tempit.egg-info
-	pipenv --rm
+	$(RMDIR) .venv
 endif
 
 upload_pypi: clean install test build check
