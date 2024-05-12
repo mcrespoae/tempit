@@ -5,10 +5,11 @@ name = "pypi"
 
 [packages]
 joblib = "*"
+setuptools = "*"
+wheel = "*"
 tempit = {file = ".", editable = true}
 
 [dev-packages]
-setuptools = "*"
 
 [requires]
 python_version = "3.12"

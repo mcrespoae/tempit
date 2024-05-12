@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "2536bebacd186d0b0e9666616d800051e963e20996c029ffcd974b1d68101033"
+            "sha256": "84c9895781ed3dee0f6632faa56a680a3d830bcd3f667737bcbbc83b2336aa91"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -25,13 +25,6 @@
             "markers": "python_version >= '3.8'",
             "version": "==1.4.2"
         },
-        "tempit": {
-            "editable": true,
-            "file": ".",
-            "markers": "python_version >= '3.8'"
-        }
-    },
-    "develop": {
         "setuptools": {
             "hashes": [
                 "sha256:6c1fccdac05a97e598fb0ae3bbed5904ccb317337a51139dcd51453611bbb987",
@@ -40,6 +33,21 @@
             "index": "pypi",
             "markers": "python_version >= '3.8'",
             "version": "==69.5.1"
+        },
+        "tempit": {
+            "editable": true,
+            "file": ".",
+            "markers": "python_version >= '3.8'"
+        },
+        "wheel": {
+            "hashes": [
+                "sha256:465ef92c69fa5c5da2d1cf8ac40559a8c940886afcef87dcf14b9470862f1d85",
+                "sha256:55c570405f142630c6b9f72fe09d9b67cf1477fcf543ae5b8dcb1f5b7377da81"
+            ],
+            "index": "pypi",
+            "markers": "python_version >= '3.8'",
+            "version": "==0.43.0"
         }
-    }
+    },
+    "develop": {}
 }

@@ -23,6 +23,7 @@ install: clean
 	pipenv install -e .
 
 build:
+	$(VENV_ACTIVATE)
 	$(PYTHON) setup.py sdist bdist_wheel
 
 example:
@@ -41,13 +42,13 @@ ifeq ($(OS),Windows_NT)
 	if exist build $(RMDIR) build
 	if exist dist $(RMDIR) dist
 	if exist tempit.egg-info $(RMDIR) tempit.egg-info
-	if exist .venv $(RMDIR) .venv
+	pipenv --rm
 
 else
 	$(RMDIR) build
 	$(RMDIR) dist
 	$(RMDIR) tempit.egg-info
-	$(RMDIR) .venv
+	pipenv --rm
 endif
 
 upload_pypi: clean install test build check
