@@ -88,7 +88,7 @@ Using the decorator @tempit without any parameters executes the function once an
 
 Measuring the time of recursive functions using decorators can be tricky due to potential verbosity in output. Using recursive functions with this package may result in very verbose output (one per each recursive call plus the original one), making it difficult to read.
 
-There are two potential solutions for this issue, [use the recursion detector](#using-the-check_for_recursion-parameter) or [encapsulating the recursive function](#encapsulate-the-recursive-function).
+There are two potential solutions for this issue, [use the recursion detector](#using-the-check_for_recursion-parameter) or [encapsulating the recursive function](#encapsulating-the-recursive-function).
 
 ### Using the `check_for_recursion` parameter
 
