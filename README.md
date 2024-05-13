@@ -82,19 +82,46 @@ Using the decorator @tempit without any parameters executes the function once an
 - `concurrency_mode` (bool, optional): Determines the concurrency mode for the function execution. It uses [joblib](https://pypi.org/project/joblib/) for parallel computing. The  default execution backend is "loky" but if the function is being triggered other than the main thread or main process, the backend will be changed to multithreading to aovid pickle errors. If, for any other reason, fails, the program will try to execute the func run_times non concurrently in the main process. Defaults to True.
 - `verbose` (bool, optional): Controls whether detailed information is printed after execution. Defaults to False.
 
+## Note with recursive functions
+
+This package doesn't work well with recursive functions. The specific reason and limitation are that using recursive functions with this package may result in very verbose output, making it difficult to read, especially for larger values.
+
+To avoid this issue, you can encapsulate the recursive function within another function and call it without printing messages. Here's an example:
+
+```python
+@tempit
+def encapsulated_recursive_function(n):
+    """A non-verbose wrapper for the recursive function."""
+    def recursive_func(n):
+        if n == 0:
+            return 0
+        else:
+            return n + recursive_func(n - 1)
+
+    return recursive_func(n)
+
+# Using the encapsulated recursive function
+result = encapsulated_recursive_function(3)
+```
+
+This approach makes the output cleaner and easier to read, especially when dealing with recursive functions with many calls.
+
 ## Contributing
 
 Contributions are welcome! Please follow these guidelines when contributing:
 
 1. Fork the repository.
-2. Create a new branch for your changes.
-3. Implement your changes and commit them.
-4. Push your changes to your forked repository.
-5. Submit a pull request.
+2. Use `make install` to install all depedencies.
+3. Create a new branch for your changes.
+4. Implement your changes and commit them.
+5. Push your changes to your forked repository.
+6. Submit a pull request.
+
+You can test your code using `make test` and `make example` to trigger the examples. Please, check the [Makefile](Makefile) to know more about commands.
 
 ## Testing
 
-The package has been thoroughly tested using unittesting. Test cases can be found in the [tests folder](tests) and can be executed using `make test`.
+The package has been thoroughly tested using unittesting. Test cases can be found in the [tests folder](tests).
 
 ## License
 

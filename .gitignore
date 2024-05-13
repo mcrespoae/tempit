@@ -3,17 +3,18 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+*.so
+*.dll
 
 # IDE/Editor specific files
 .vscode/
 .idea/
 *.egg-info/
 *.egg/
+*.eggs/
 dist/
 build/
 
-# Compiled Python files
-*.pyc
 
 # Dependencies
 .venv/
@@ -23,12 +24,6 @@ env/
 *.env
 *.cfg
 *.ini
-
-# Ignore any compiled files
-*.so
-*.dll
-*.pyd
-*.pyo
 
 # Ignore any log files
 *.log

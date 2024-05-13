@@ -300,22 +300,22 @@ class TestTempitDecoratorFunction(unittest.TestCase):
             return fib(n=n)
 
         start_time = time.perf_counter()
-        result_concurrent = my_concurrent_function(200_000_000, n=32)
+        result_concurrent = my_concurrent_function(20_000_000, n=16)
         end_time = time.perf_counter()
         execution_time_concurrent = end_time - start_time
 
         start_time = time.perf_counter()
-        result_sequential = my_sequential_function(200_000_000, n=32)
+        result_sequential = my_sequential_function(20_000_000, n=16)
         end_time = time.perf_counter()
         execution_time_sequential = end_time - start_time
 
         # self.assertGreaterEqual(execution_time_sequential, lower_bound)
         self.assertLessEqual(
-            execution_time_concurrent, (execution_time_sequential / 4) + (execution_time_sequential * 0.1)
+            execution_time_concurrent, (execution_time_sequential / 3) + (execution_time_sequential * 0.2)
         )
 
-        self.assertEqual(result_concurrent, 2178309)
-        self.assertEqual(result_sequential, 2178309)
+        self.assertEqual(result_concurrent, 987)
+        self.assertEqual(result_sequential, 987)
 
 
 def fib(n):

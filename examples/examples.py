@@ -93,16 +93,16 @@ def tempit_other_process(a: int = 1, b: int = 2):
     return a + b
 
 
-@tempit(run_times=5, concurrent_execution=True, verbose=True)
+@tempit(run_times=4, concurrent_execution=True, verbose=True)
 def call_long_process_concurrent(n):
-    for _ in range(20_000_000):
+    for _ in range(2_000_000):
         pass  #
     return fib(n)
 
 
-@tempit(run_times=5, concurrent_execution=False, verbose=True)
+@tempit(run_times=4, concurrent_execution=False, verbose=True)
 def call_long_process_sequential(n):
-    for _ in range(20_000_000):
+    for _ in range(2_000_000):
         pass  #
     return fib(n)
 
@@ -192,8 +192,8 @@ def main():
 
     print("---END FUNCTION EXAMPLES---")
     print("---OTHER EXAMPLES---")
-    _ = call_long_process_concurrent(32)
-    _ = call_long_process_sequential(32)
+    _ = call_long_process_concurrent(16)
+    _ = call_long_process_sequential(16)
     print("---END OTHER EXAMPLES---")
 
 

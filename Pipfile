@@ -4,13 +4,14 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-joblib = "*"
-setuptools = "*"
-wheel = "*"
-twine = "*"
-tempit = {file = ".", editable = true}
+joblib = "==1.4.2"
 
 [dev-packages]
+setuptools = "==69.5.*"
+wheel = "==0.43.*"
+twine = "==5.0.*"
+build = "==1.2.*"
+tempit = {file = ".", editable = true}
 
 [requires]
 python_version = "3.12"

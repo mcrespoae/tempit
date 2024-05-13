@@ -1,6 +1,6 @@
 from setuptools import setup
 
-VERSION = "0.1.3"
+VERSION = "0.1.4"
 setup(
     name="tempit",
     version=VERSION,
@@ -11,8 +11,8 @@ setup(
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     url="https://github.com/mcrespoae/tempit",
-    install_requires=["joblib"],
-    setup_requires=["joblib"],
+    install_requires=["joblib==1.4.2"],
+    setup_requires=["joblib==1.4.2"],
     python_requires=">=3.8",
     keywords=["tempit", "time", "decorator", "performance", "concurrency", "parallel", "benchmark"],
     classifiers=[
