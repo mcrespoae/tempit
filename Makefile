@@ -51,7 +51,8 @@ else
 	-@$(RMDIR) .venv
 endif
 
-upload_pypi: clean install test build check
-	$(PYTHON) -m twine upload dist/*
+upload-pypi: clean install test build check
+# Upload to PyPI. Make sure you have in your ~/.pypirc file in home directory
+	$(VENV_ACTIVATE) $(PYTHON) -m twine upload dist/*
 
 
