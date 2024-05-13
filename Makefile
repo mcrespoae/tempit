@@ -21,7 +21,6 @@ install:
 	$(PYTHON) -m venv .venv
 	pipenv install -e . --dev
 
-
 build:
 	$(VENV_ACTIVATE) $(PYTHON) -m build
 
@@ -38,14 +37,16 @@ clean:
 ifeq ($(OS),Windows_NT)
 	if exist build $(RMDIR) build
 	if exist dist $(RMDIR) dist
+	if exist .eggs $(RMDIR) .eggs
 	if exist tempit.egg-info $(RMDIR) tempit.egg-info
-	-@$(VENV_ACTIVATE) pipenv --rm
-	-@del /F /Q .venv\\Scripts\\python.exe
+#	-@$(VENV_ACTIVATE) pipenv --rm
+#	-@del /F /Q .venv\\Scripts\\python.exe
 #	-@$(shell if exist .venv $(RMDIR) .venv)
 
 else
 	$(RMDIR) build
 	$(RMDIR) dist
+	$(RMDIR) .eggs
 	$(RMDIR) tempit.egg-info
 	-@$(VENV_ACTIVATE) pipenv --rm
 #	-@$(RMDIR) .venv
