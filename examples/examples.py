@@ -113,7 +113,19 @@ def fib(n):
     return fib(n - 2) + fib(n - 1)
 
 
+@tempit(run_times=3, concurrent_execution=True, verbose=False, check_for_recursion=True)
+def recursive_func(n):
+    if n < 2:
+        return n
+    return recursive_func(n - 2) + recursive_func(n - 1)
+
+
 @tempit
+def non_recursive_func(n):
+    return n
+
+
+#@tempit
 def main():
 
     test_class = TempitTestClass()
@@ -140,6 +152,7 @@ def main():
     print("Class method")
     _, _ = test_class.class_method(1, b=2)
 
+
     # Test with calling the function from another thread and process
     with ThreadPoolExecutor(max_workers=1) as executor:
         print("Other thread methods")
@@ -154,10 +167,10 @@ def main():
         print("Other process methods")
         future_basic_method = executor.submit(test_class.tempit_basic)
         future_basic_method.result()
-        future_class_method = executor.submit(test_class.class_method, 1, b=2)
         _, _ = future_class_method.result()
         future_static_method = executor.submit(test_class.static_method, 1, b=2)
         _ = future_static_method.result()
+
     print("---END CLASS EXAMPLES---")
 
     print("---FUNCTION EXAMPLES---")
@@ -194,6 +207,7 @@ def main():
     print("---OTHER EXAMPLES---")
     _ = call_long_process_concurrent(16)
     _ = call_long_process_sequential(16)
+    _ = recursive_func(10)
     print("---END OTHER EXAMPLES---")
 
 

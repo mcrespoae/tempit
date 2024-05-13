@@ -17,7 +17,7 @@ endif
 .PHONY: install build example test check clean upload_pypi
 
 
-install: clean
+install:
 	$(PYTHON) -m venv .venv
 	pipenv install -e . --dev
 

@@ -5,7 +5,13 @@ from typing import Any, Callable, Dict, List, Tuple
 from .utils import print_tempit_values
 
 
-def tempit(*args: Any, run_times: int = 1, concurrent_execution: bool = True, verbose: bool = False) -> Callable:
+def tempit(
+    *args: Any,
+    run_times: int = 1,
+    concurrent_execution: bool = True,
+    verbose: bool = False,
+    check_for_recursion: bool = False,
+) -> Callable:
     """
     Decorator function that measures the execution time of a given function. It can be called like @tempit or using arguments @tempit(...)
 
@@ -44,30 +50,67 @@ def tempit(*args: Any, run_times: int = 1, concurrent_execution: bool = True, ve
     """
 
     def decorator(
-        func: Callable, run_times: int = 1, concurrent_execution: bool = True, verbose: bool = False
+        func: Callable,
+        run_times: int = 1,
+        concurrent_execution: bool = True,
+        verbose: bool = False,
+        check_for_recursion: bool = False,
     ) -> Callable:
         @wraps(func)
         def tempit_wrapper(*args: Tuple, **kwargs: Dict) -> Any:
+            is_recursive, run_times_final, concurrent_execution_final = check_is_recursive_func(check_for_recursion, func, run_times, concurrent_execution)
             callable_func, args, args_to_print = extract_callable_and_args_if_method(func, *args)
             result, total_times, real_time = function_execution(
                 callable_func,
-                run_times,
-                concurrent_execution,
+                run_times_final,
+                concurrent_execution_final,
                 *args,
                 **kwargs,
             )
-
-            print_tempit_values(run_times, verbose, callable_func, total_times, real_time, *args_to_print, **kwargs)
-
+            if not is_recursive:
+                print_tempit_values(run_times, verbose, callable_func, total_times, real_time, *args_to_print, **kwargs)
             return result
 
         return tempit_wrapper
 
     if args:  # If arguments are not provided, return a decorator
-        return decorator(*args, run_times=run_times, concurrent_execution=concurrent_execution, verbose=verbose)
+        return decorator(
+            *args,
+            run_times=run_times,
+            concurrent_execution=concurrent_execution,
+            verbose=verbose,
+            check_for_recursion=check_for_recursion,
+        )
 
     else:  # Otherwise, return a partial function
-        return partial(decorator, run_times=run_times, concurrent_execution=concurrent_execution, verbose=verbose)
+        return partial(
+            decorator,
+            run_times=run_times,
+            concurrent_execution=concurrent_execution,
+            verbose=verbose,
+            check_for_recursion=check_for_recursion,
+        )
+
+
+def check_is_recursive_func(check_for_recursion: bool, func: Callable, run_times: int, concurrent_execution: bool) -> Tuple[bool, int, bool]:
+    """
+    Checks if the function is being called recursively.
+    Returns:
+        Tuple[bool, int, bool]: A tuple containing True if the function is being called recursively, False otherwise.
+        The second element is the number of times the function has been called, and the third element is a boolean indicating if the function has crashed.
+    """
+
+    if check_for_recursion:
+        import sys
+        from inspect import getframeinfo
+        func_name = func.__name__
+        func_filename = ""
+        if hasattr(func, '__code__'):
+            func_filename = func.__code__.co_filename
+        frame = getframeinfo(sys._getframe(2), context=0)
+        if frame.function == func_name and func_filename == frame.filename:
+            return True, 1, False
+    return False, run_times, concurrent_execution
 
 
 def extract_callable_and_args_if_method(func, *args) -> Tuple[Callable, Tuple, Tuple]:
@@ -84,7 +127,6 @@ def extract_callable_and_args_if_method(func, *args) -> Tuple[Callable, Tuple, T
     """
     callable_func = func
     args_to_print = args
-
     is_method = hasattr(args[0], func.__name__) if args else False
     if is_method:
         args_to_print = args[1:]
@@ -148,8 +190,9 @@ def tempit_main_process(func: Callable, run_times: int, *args: Tuple, **kwargs: 
             result: Any = func(*args, **kwargs)
         except Exception as e:
             print(e)
-        end_time: float = time.perf_counter()
-        total_times.append(end_time - start_time)
+        finally:
+            end_time: float = time.perf_counter()
+            total_times.append(end_time - start_time)
     return result, total_times
 
 
