@@ -41,14 +41,14 @@ ifeq ($(OS),Windows_NT)
 	if exist tempit.egg-info $(RMDIR) tempit.egg-info
 	-@$(VENV_ACTIVATE) pipenv --rm
 	-@del /F /Q .venv\\Scripts\\python.exe
-	-@$(shell if exist .venv $(RMDIR) .venv)
+#	-@$(shell if exist .venv $(RMDIR) .venv)
 
 else
 	$(RMDIR) build
 	$(RMDIR) dist
 	$(RMDIR) tempit.egg-info
 	-@$(VENV_ACTIVATE) pipenv --rm
-	-@$(RMDIR) .venv
+#	-@$(RMDIR) .venv
 endif
 
 upload-pypi: clean install test build check

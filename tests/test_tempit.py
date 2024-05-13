@@ -292,10 +292,8 @@ class TestTempitDecoratorFunction(unittest.TestCase):
                 return n
             return my_function(n - 2) + my_function(n - 1)
 
-
         result = my_function(7)
         self.assertEqual(result, 13)
-
 
     @unittest.skipUnless(not IN_GITHUB_ACTIONS, "Skip if running in GitHub Actions: too expensive.")
     def test_tempit_long_running_function(self):
