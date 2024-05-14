@@ -1,4 +1,10 @@
+
 # Tempit
+
+![PyPI](https://img.shields.io/pypi/v/tempit?label=pypi%20package)
+![PyPI - Downloads](https://img.shields.io/pypi/dm/tempit)
+
+## Overview
 
 Tempit is a Python package designed to simplify the process of measuring the execution time of your functions through a straightforward decorator.
 
@@ -65,7 +71,7 @@ Function name: my_function_with_args
 ***** End of tempit data. *****
 ```
 
-More examples can be found in the [examples.py](examples/examples.py) script.
+More examples can be found in the [examples.py](https://github.com/mcrespoae/tempit/blob/main/tests/test_tempit.py) script.
 
 ## Features
 
@@ -154,15 +160,15 @@ Contributions are welcome! Please follow these guidelines when contributing:
 5. Push your changes to your forked repository.
 6. Submit a pull request.
 
-You can test your code using `make test` and `make example` to trigger the examples. Please, check the [Makefile](Makefile) to know more about commands.
+You can test your code using `make test` and `make example` to trigger the examples. Please, check the [Makefile](https://github.com/mcrespoae/tempit/blob/main/Makefile) to know more about commands.
 
 ## Testing
 
-The package has been thoroughly tested using unittesting. Test cases can be found in the [tests folder](tests).
+The package has been thoroughly tested using unittesting. Test cases can be found in the [tests folder](https://github.com/mcrespoae/tempit/tree/main/tests).
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE.txt).
+This project is licensed under the [MIT License](https://github.com/mcrespoae/tempit/blob/main/LICENSE).
 
 ## Contributors
 

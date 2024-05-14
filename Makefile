@@ -14,11 +14,16 @@ else
 
 endif
 
-.PHONY: install build example test check clean upload_pypi
+.PHONY: install build example test check clean upload_pypi upload-testpypi
 
 
 install:
-	$(PYTHON) -m venv .venv
+	$(info Installing the repo)
+ifeq ($(OS),Windows_NT)
+	@if not exist .venv mkdir .venv
+else
+	@mkdir -p .venv
+endif
 	pipenv install -e . --dev
 
 build:
@@ -35,21 +40,17 @@ check:
 
 clean:
 ifeq ($(OS),Windows_NT)
-	if exist build $(RMDIR) build
-	if exist dist $(RMDIR) dist
-	if exist .eggs $(RMDIR) .eggs
-	if exist tempit.egg-info $(RMDIR) tempit.egg-info
-#	-@$(VENV_ACTIVATE) pipenv --rm
-#	-@del /F /Q .venv\\Scripts\\python.exe
-#	-@$(shell if exist .venv $(RMDIR) .venv)
+	@if exist build $(RMDIR) build
+	@if exist dist $(RMDIR) dist
+	@if exist .eggs $(RMDIR) .eggs
+	@if exist tempit.egg-info $(RMDIR) tempit.egg-info
 
 else
 	$(RMDIR) build
 	$(RMDIR) dist
 	$(RMDIR) .eggs
 	$(RMDIR) tempit.egg-info
-	-@$(VENV_ACTIVATE) pipenv --rm
-#	-@$(RMDIR) .venv
+
 endif
 
 upload-pypi: clean install test build check
@@ -58,7 +59,8 @@ upload-pypi: clean install test build check
 
 upload-testpypi: clean install test build check
 # Upload to TestPyPI. Make sure you have in your ~/.pypirc file in home directory
-# Use python3 -m pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ tempit
+# Use $(PYTHON) -m pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ tempit
 # for installing the testpypi version
+# or use pipenv install tempit -i https://test.pypi.org/simple
 	$(VENV_ACTIVATE) $(PYTHON) -m twine upload --repository testpypi dist/*
 
