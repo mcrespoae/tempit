@@ -125,7 +125,7 @@ def non_recursive_func(n):
     return n
 
 
-#@tempit
+@tempit
 def main():
 
     test_class = TempitTestClass()
@@ -151,7 +151,6 @@ def main():
     _ = test_class.static_method(1, b=2)
     print("Class method")
     _, _ = test_class.class_method(1, b=2)
-
 
     # Test with calling the function from another thread and process
     with ThreadPoolExecutor(max_workers=1) as executor:

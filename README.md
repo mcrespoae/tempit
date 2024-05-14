@@ -12,6 +12,8 @@ pip install tempit
 
 ## Usage
 
+Tempit decorator should only be used for benchmarking; it is not intended for production code.
+
 Below are some examples demonstrating Tempit's usage:
 
 ### Basic Usage

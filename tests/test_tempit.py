@@ -319,7 +319,6 @@ class TestTempitDecoratorFunction(unittest.TestCase):
         end_time = time.perf_counter()
         execution_time_sequential = end_time - start_time
 
-        # self.assertGreaterEqual(execution_time_sequential, lower_bound)
         self.assertLessEqual(
             execution_time_concurrent, (execution_time_sequential / 3) + (execution_time_sequential * 0.2)
         )
