@@ -56,4 +56,9 @@ upload-pypi: clean install test build check
 # Upload to PyPI. Make sure you have in your ~/.pypirc file in home directory
 	$(VENV_ACTIVATE) $(PYTHON) -m twine upload dist/*
 
+upload-testpypi: clean install test build check
+# Upload to TestPyPI. Make sure you have in your ~/.pypirc file in home directory
+# Use python3 -m pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ tempit
+# for installing the testpypi version
+	$(VENV_ACTIVATE) $(PYTHON) -m twine upload --repository testpypi dist/*
 
