@@ -71,7 +71,7 @@ Function name: my_function_with_args
 ***** End of tempit data. *****
 ```
 
-More examples can be found in the [examples.py](https://github.com/mcrespoae/tempit/blob/main/tests/test_tempit.py) script.
+More examples can be found in the [examples.py](https://github.com/mcrespoae/tempit/blob/main/examples/examples.py) script.
 
 ## Features
 
