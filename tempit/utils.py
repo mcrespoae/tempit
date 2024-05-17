@@ -26,7 +26,7 @@ def print_tempit_values(
     """
     if verbose:
         print("*" * 5, f"tempit data for function {func.__name__}:", "*" * 5)
-    if run_times == 1:
+    if run_times <= 1:
         print_single_value(verbose, func, total_times[0], *args, **kwargs)
     else:
         print_several_values(verbose, func, total_times, real_time, *args, **kwargs)

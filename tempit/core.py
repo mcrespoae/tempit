@@ -58,7 +58,9 @@ def tempit(
     ) -> Callable:
         @wraps(func)
         def tempit_wrapper(*args: Tuple, **kwargs: Dict) -> Any:
-            is_recursive, run_times_final, concurrent_execution_final = check_is_recursive_func(check_for_recursion, func, run_times, concurrent_execution)
+            is_recursive, run_times_final, concurrent_execution_final = check_is_recursive_func(
+                check_for_recursion, func, run_times, concurrent_execution
+            )
             callable_func, args, args_to_print = extract_callable_and_args_if_method(func, *args)
             result, total_times, real_time = function_execution(
                 callable_func,
@@ -68,7 +70,9 @@ def tempit(
                 **kwargs,
             )
             if not is_recursive:
-                print_tempit_values(run_times, verbose, callable_func, total_times, real_time, *args_to_print, **kwargs)
+                print_tempit_values(
+                    run_times_final, verbose, callable_func, total_times, real_time, *args_to_print, **kwargs
+                )
             return result
 
         return tempit_wrapper
@@ -92,7 +96,9 @@ def tempit(
         )
 
 
-def check_is_recursive_func(check_for_recursion: bool, func: Callable, run_times: int, concurrent_execution: bool) -> Tuple[bool, int, bool]:
+def check_is_recursive_func(
+    check_for_recursion: bool, func: Callable, run_times: int, concurrent_execution: bool
+) -> Tuple[bool, int, bool]:
     """
     Checks if the function is being called recursively.
     Returns:
@@ -103,9 +109,10 @@ def check_is_recursive_func(check_for_recursion: bool, func: Callable, run_times
     if check_for_recursion:
         import sys
         from inspect import getframeinfo
+
         func_name = func.__name__
         func_filename = ""
-        if hasattr(func, '__code__'):
+        if hasattr(func, "__code__"):
             func_filename = func.__code__.co_filename
         frame = getframeinfo(sys._getframe(2), context=0)
         if frame.function == func_name and func_filename == frame.filename:
