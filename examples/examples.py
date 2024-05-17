@@ -125,7 +125,7 @@ def non_recursive_func(n):
     return n
 
 
-@tempit
+@tempit(run_times=0, verbose=True)
 def main():
 
     test_class = TempitTestClass()

@@ -255,7 +255,7 @@ class TestTempitDecoratorFunction(unittest.TestCase):
         self.assertLess(execution_time, 0.5)
 
     def test_tempit_args(self):
-        @tempit(run_times=2, concurrent_execution=True, verbose=True)
+        @tempit(run_times=0, concurrent_execution=True, verbose=True)
         def my_function(a: int = 1, b: int = 2):
             return a + b
 
