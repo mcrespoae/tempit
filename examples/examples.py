@@ -129,8 +129,8 @@ def non_recursive_func(n):
 @tempit(run_times=0, verbose=True)
 def main():
 
-    # test_class = TempitTestClass()
-    """
+    test_class = TempitTestClass()
+
     print("---CLASS EXAMPLES---")
 
     print("Once in class basic")
@@ -162,17 +162,16 @@ def main():
         _, _ = future_class_method.result()
         future_static_method = executor.submit(test_class.static_method, 1, b=2)
         _ = future_static_method.result()
-    """
+
     with ProcessPoolExecutor(max_workers=1) as executor:
-        new_test_class = TempitTestClass()
-        print("Other process methods")
-        future_basic_method = executor.submit(new_test_class.tempit_basic)
+        print("Other process methods. This part crashes")
+        future_basic_method = executor.submit(test_class.tempit_basic)
         future_basic_method.result()
-        # future_class_method = executor.submit(test_class.class_method, 1, b=2)
-        # _, _ = future_class_method.result()
-        # future_static_method = executor.submit(new_test_class.static_method, 1, b=2)
-        # _ = future_static_method.result()
-    return
+        future_class_method = executor.submit(test_class.class_method, 1, b=2)
+        _, _ = future_class_method.result()
+        future_static_method = executor.submit(test_class.static_method, 1, b=2)
+        _ = future_static_method.result()
+
     print("---END CLASS EXAMPLES---")
 
     print("---FUNCTION EXAMPLES---")

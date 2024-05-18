@@ -148,7 +148,7 @@ def extract_callable_and_args_if_method(func: Callable, *args: Tuple) -> Tuple[C
     callable_func = func
     args_to_print = args
     is_method = hasattr(args[0], func.__name__) if args else False
-    print(type(func))
+
     if isinstance(func, type):
         pass  # It is a class. It will raise a pickle exception if it is triggered from a new process
 
@@ -260,6 +260,10 @@ def tempit_with_concurrency(func: Callable, run_times: int, *args: Tuple, **kwar
             end_time = time.perf_counter()
         return result, end_time - start_time, has_crashed
 
+    EXCEPTION_MESSAGE = (
+        "An exception was raised in one of the concurrent jobs. Trying to execute in the main process non-concurrently."
+    )
+
     joblib_backend = None  # Default backend for joblib
     # Rule of thumb, use at least 2 workers or at least the number of cores minus 1.
     # It is not ideal for multithreading, but it will make good balance
@@ -275,14 +279,19 @@ def tempit_with_concurrency(func: Callable, run_times: int, *args: Tuple, **kwar
 
     except PicklingError:  # If a pickle error is raised, use threading instead of multiprocessing
         joblib_backend = "threading"
-        results: List[Tuple[Any, float, bool]] = Parallel(n_jobs=workers, backend=joblib_backend, prefer="threads")(
-            delayed(run_func)(func, *args, **kwargs) for _ in range(run_times)
-        )  # type: ignore
+        try:
+            results: List[Tuple[Any, float, bool]] = Parallel(n_jobs=workers, backend=joblib_backend, prefer="threads")(
+                delayed(run_func)(func, *args, **kwargs) for _ in range(run_times)
+            )  # type: ignore
 
-    if any(has_crashed for _, _, has_crashed in results):
-        raise RuntimeError(
-            "An exception was raised in one of the concurrent jobs. Trying to execute in the main process non-concurrently."
-        )
+        except Exception:
+            raise RuntimeError(EXCEPTION_MESSAGE)
+
+    except Exception:
+        raise RuntimeError(EXCEPTION_MESSAGE)
+
+    if any(has_crashed for _, _, has_crashed in results):  # This code will be deprecated soon
+        raise RuntimeError(EXCEPTION_MESSAGE)
 
     total_times = [total_time for _, total_time, has_crashed in results if not has_crashed]
     result = results[0][0]

@@ -159,16 +159,18 @@ def show_error(e: Exception, filename: str = __file__) -> None:
     tb_level: int = 0
     tb: List = traceback.extract_tb(e.__traceback__)
     inside: bool = False
-
+    print(e.__class__.__name__, e)
     while True:
-        filename_err, lineno, _, _ = tb[tb_level]
+        if tb_level >= len(tb):
+            break
+        filename_err, lineno, funcname, line = tb[tb_level]
         tb_level += 1
 
         if filename_err.lower() == filename.lower():
+            print(f"In file, {filename_err}, at line {lineno}, in function {funcname}, {line.strip()}")
             inside = True
             continue
         if filename_err.lower() != filename.lower() and inside:
             break
 
-    print(e)
-    print("Error occurred at line", lineno, "in file", filename_err)
+    print(f"In file, {filename_err}, at line {lineno}, in function {funcname}, {line.strip()}")
