@@ -9,8 +9,8 @@ from tempit import tempit
 @tempit
 class TempitTestClass:
     @tempit
-    def tempit_basic(self):
-        time.sleep(0.01)
+    def tempit_basic(self, a: int = 1, b: int = 2):
+        return a + b
 
     @tempit(run_times=5)
     def tempit_5times(self):
@@ -84,26 +84,16 @@ def args_func(a: int = 1, b: int = 2):
     return a + b
 
 
-@tempit(run_times=5)
-def tempit_other_thread(a: int = 1, b: int = 2):
-    return a + b
-
-
-@tempit(run_times=5)
-def tempit_other_process(a: int = 1, b: int = 2):
-    return a + b
-
-
-@tempit(run_times=4, concurrent_execution=True, verbose=True)
+@tempit(run_times=4, concurrent_execution=True, verbose=False)
 def call_long_process_concurrent(n):
-    for _ in range(2_000_000):
+    for _ in range(10_000_000):
         pass  #
     return fib(n)
 
 
-@tempit(run_times=4, concurrent_execution=False, verbose=True)
+@tempit(run_times=4, concurrent_execution=False, verbose=False)
 def call_long_process_sequential(n):
-    for _ in range(2_000_000):
+    for _ in range(10_000_000):
         pass  #
     return fib(n)
 
@@ -114,27 +104,36 @@ def fib(n):
     return fib(n - 2) + fib(n - 1)
 
 
-@tempit(run_times=3, concurrent_execution=True, verbose=False, check_for_recursion=True)
+@tempit(run_times=1, concurrent_execution=True, verbose=False)
 def recursive_func(n):
     if n < 2:
         return n
     return recursive_func(n - 2) + recursive_func(n - 1)
 
 
-@tempit
-def non_recursive_func(n):
-    return n
+@tempit(run_times=1, concurrent_execution=True, verbose=False)
+def wrapped_recursive_func(n):
+    def recursive_func_wr(n):
+        if n < 2:
+            return n
+        return recursive_func_wr(n - 2) + recursive_func_wr(n - 1)
+
+    return recursive_func(n)
+
+
+@tempit(run_times=1, concurrent_execution=True, verbose=False)
+def tempit_with_recursive_func(n):
+    return recursive_func(n)
 
 
 @tempit(run_times=0, verbose=True)
 def main():
-
     test_class = TempitTestClass()
 
     print("---CLASS EXAMPLES---")
 
     print("Once in class basic")
-    test_class.tempit_basic()
+    _ = test_class.tempit_basic(1, b=2)
     print("Concurrency 5 times in class")
     test_class.tempit_5times()
     print("Concurrency 5 times in class verbose")
@@ -163,20 +162,22 @@ def main():
         future_static_method = executor.submit(test_class.static_method, 1, b=2)
         _ = future_static_method.result()
 
-    with ProcessPoolExecutor(max_workers=1) as executor:
-        print("Other process methods. This part crashes")
-        future_basic_method = executor.submit(test_class.tempit_basic)
-        future_basic_method.result()
-        future_class_method = executor.submit(test_class.class_method, 1, b=2)
-        _, _ = future_class_method.result()
-        future_static_method = executor.submit(test_class.static_method, 1, b=2)
-        _ = future_static_method.result()
+    if False:  # This crashes at the moment if the class is decorated with @tempit
+        with ProcessPoolExecutor(max_workers=1) as executor:
+            print("Other process methods. This part crashes")
+            future_basic_method = executor.submit(test_class.tempit_basic)
+            future_basic_method.result()
+            future_class_method = executor.submit(test_class.class_method, 1, b=2)
+            _, _ = future_class_method.result()
+            future_static_method = executor.submit(test_class.static_method, 1, b=2)
+            _ = future_static_method.result()
 
     print("---END CLASS EXAMPLES---")
 
     print("---FUNCTION EXAMPLES---")
     print("Once basic")
     tempit_basic()
+
     print("Concurrency 5 times")
     tempit_5times()
     print("Concurrency 5 times verbose")
@@ -206,9 +207,11 @@ def main():
 
     print("---END FUNCTION EXAMPLES---")
     print("---OTHER EXAMPLES---")
-    _ = call_long_process_concurrent(16)
-    _ = call_long_process_sequential(16)
     _ = recursive_func(10)
+    _ = wrapped_recursive_func(10)
+    _ = tempit_with_recursive_func(10)
+    _ = call_long_process_sequential(16)
+    _ = call_long_process_concurrent(16)
     print("---END OTHER EXAMPLES---")
 
 

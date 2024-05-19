@@ -1,3 +1,4 @@
+import inspect
 import time
 import warnings
 from collections import deque
@@ -26,12 +27,14 @@ def tempit(
                                                If the execution of the concurrency fails, it will try to execute the func run_times non concurrently in the main process.
                                                Defaults to True.
         verbose (bool, optional): Whether to print detailed information after execution. Defaults to False.
+        check_for_recursion (bool | None, optional): DEPRECATED. Whether to check if the function is being called recursively. Defaults to None.
 
     Returns:
         Callable: The decorated function if arguments are provided, otherwise a partial function.
 
     Raises:
         RuntimeError: If the concurrency mode fails, the function is executed in the main process.
+        Exception: If the function crashes, it will raise the exception given by the user's function.
 
     Notes:
         - If `run_times` is less than 1, it will be set to 1.
@@ -66,40 +69,42 @@ def tempit(
 
         @wraps(func)
         def tempit_wrapper(*args: Tuple, **kwargs: Dict) -> Any:
-            nonlocal potential_recursion_func_stack
-            nonlocal is_recursive
-            nonlocal time_wasted
+            nonlocal potential_recursion_func_stack, is_recursive, time_wasted
 
-            start_time = time.perf_counter()
+            start_time: float = time.perf_counter()
             run_times_final, concurrent_execution_final, is_recursive = check_is_recursive_func(
                 func, run_times, concurrent_execution, potential_recursion_func_stack
             )
-            callable_func, args, args_to_print = extract_callable_and_args_if_method(func, *args)
+            callable_func, args, args_to_print = extract_callable_and_args_if_method(func, *args, **kwargs)
 
             if is_recursive:  # If the function is recursive, it will be executed directly
-                end_time = time.perf_counter()
                 with time_wasted_lock:  # Update the time non-ocurring in the function execution
+                    end_time: float = time.perf_counter()
                     time_wasted += end_time - start_time
-                try:
-                    result = func(*args, **kwargs)
-                except Exception as e:
-                    show_error(e, filename=__file__)
-                    result = None
-
+                result: Any = run_func_recursive(func, *args, **kwargs)
                 potential_recursion_func_stack.pop()
                 return result
 
             result, total_times, real_time = function_execution(
-                callable_func, run_times_final, concurrent_execution_final, *args, **kwargs
+                callable_func,
+                run_times_final,
+                concurrent_execution_final,
+                *args,
+                **kwargs,
             )
 
-            wasted_time_avg = time_wasted / len(total_times)
-            total_times = [x - wasted_time_avg for x in total_times]
+            total_times: List[float] = update_total_times(total_times, time_wasted)
 
             potential_recursion_func_stack.pop()
             if not potential_recursion_func_stack:  # The function is not recursive at the moment, so it will be printed
                 print_tempit_values(
-                    run_times_final, verbose, callable_func, total_times, real_time, *args_to_print, **kwargs
+                    run_times_final,
+                    verbose,
+                    callable_func,
+                    total_times,
+                    real_time,
+                    *args_to_print,
+                    **kwargs,
                 )
 
             return result
@@ -107,10 +112,26 @@ def tempit(
         return tempit_wrapper
 
     if args:  # If arguments are not provided, return a decorator
-        return decorator(*args, run_times=run_times, concurrent_execution=concurrent_execution, verbose=verbose)
+        return decorator(*args)
 
     else:  # Otherwise, return a partial function
         return partial(decorator, run_times=run_times, concurrent_execution=concurrent_execution, verbose=verbose)
+
+
+def update_total_times(total_times: List[float], time_wasted: float) -> List[float]:
+    """
+    Updates the total times by subtracting the average time wasted from each time if the function was recursive.
+    Args:
+        total_times (List[float]): A list of total times for each run.
+        time_wasted (float): The total time wasted. Only used if the function is recursive.
+    Returns:
+        List[float]: A list of updated total times.
+    """
+    if time_wasted == 0:  # Early return
+        return total_times
+    time_wasted_avg: float = time_wasted / len(total_times)
+    # The max (x, 0) is due to the fact that the time wasted can be negative if we are analyzing a decorated function inside a decorated function
+    return [max(x - time_wasted_avg, 0) for x in total_times]
 
 
 def check_is_recursive_func(
@@ -126,31 +147,38 @@ def check_is_recursive_func(
     if potential_recursion_func_stack and potential_recursion_func_stack[-1] == func:
         potential_recursion_func_stack.append(func)
         # Check if the function is being called recursively by checking the object identity. This is way faster than using getFrameInfo
-        warning_msg = "Recursive function detected. This process may be slow. To improve performance, consider wrapping the recursive function in another function and applying the @tempit decorator to the new function."
+        warning_msg = "Recursive function detected. This process may be slow. Consider wrapping the recursive function in another function and applying the @tempit decorator to the new function."
         warnings.warn(warning_msg, stacklevel=3)
         return 1, False, True
     potential_recursion_func_stack.append(func)
     return run_times, concurrent_execution, False
 
 
-def extract_callable_and_args_if_method(func: Callable, *args: Tuple) -> Tuple[Callable, Tuple, Tuple]:
+def extract_callable_and_args_if_method(func: Callable, *args: Tuple, **kwargs: Dict) -> Tuple[Callable, Tuple, Tuple]:
     """
     Extracts the callable function and arguments from a given function, if it is a method.
     Args:
         func (Callable): The function to extract the callable from.
-        args: Variable length argument list.
+        *args: Variable length argument list.
+        **kwargs (Dict): The keyword arguments to be passed to the function.
     Returns:
         Tuple[Callable, Tuple, Tuple]: A tuple containing the extracted callable function, the modified arguments,
         and the arguments to be printed.
-    Raises:
-        None
     """
-    callable_func = func
-    args_to_print = args
-    is_method = hasattr(args[0], func.__name__) if args else False
 
-    if isinstance(func, type):
-        pass  # It is a class. It will raise a pickle exception if it is triggered from a new process
+    callable_func: Callable = func
+    args_to_print: Tuple = args
+    is_method: bool = hasattr(args[0], func.__name__) if args else False
+    if inspect.isclass(func):
+        # TODO: Add proper support for class decorators
+        # This is calling the class constructor directly. Move it into the execution function. I think it shuold be func.__init__(*args, **kwargs)
+        # class_wrapper = func.__init__(args, kwargs)  # prettier-ignore
+
+        # func.__new__ = class_wrapper
+        # callable_func = func
+        # if isinstance(func, type):
+        warning_msg = "Class decoration detected. It is not recommended to use @tempit with classes that will be triggered from a new process, as it will raise a pickle exception."
+        warnings.warn(warning_msg, stacklevel=3)
 
     if is_method:
         args_to_print = args[1:]
@@ -159,7 +187,6 @@ def extract_callable_and_args_if_method(func: Callable, *args: Tuple) -> Tuple[C
             callable_func = func.__func__
         elif isinstance(func, staticmethod):
             args = args[1:]
-
     return callable_func, args, args_to_print
 
 
@@ -178,24 +205,51 @@ def function_execution(
         Tuple[Any, List[float], float]: A tuple containing the result of the function,
         a list of execution times for each run, and the total real time taken.
     """
+    if inspect.isclass(callable_func):
+        pass  # TODO: Add proper support for class decorators
+
+        # def class_wrapper(*args, **kwargs):
+        #    return callable_func(*args, **kwargs)
+
+        # callable_func.__init__ = class_wrapper
+        # is_method = hasattr(args[0], callable_func.__name__) if args else False
+        # print(is_method)
+
+        # return callable_func, [0], 0
 
     if run_times < 1:
         run_times = 1
-    start_time = time.perf_counter()
+    start_time: float = time.perf_counter()
     if run_times > 1 and concurrent_execution:
         try:
-            result, total_times = tempit_with_concurrency(callable_func, run_times, *args, **kwargs)
+            result, total_times = run_func_concurrency(callable_func, run_times, *args, **kwargs)
         except RuntimeError as e:
             show_error(e, filename=__file__)
-            result, total_times = tempit_main_process(callable_func, run_times, *args, **kwargs)
+            result, total_times = run_func_main_process(callable_func, run_times, *args, **kwargs)
     else:
-        result, total_times = tempit_main_process(callable_func, run_times, *args, **kwargs)
-    end_time = time.perf_counter()
-    real_time = end_time - start_time
+        result, total_times = run_func_main_process(callable_func, run_times, *args, **kwargs)
+    end_time: float = time.perf_counter()
+    real_time: float = end_time - start_time
     return result, total_times, real_time
 
 
-def tempit_main_process(func: Callable, run_times: int, *args: Tuple, **kwargs: Dict) -> Tuple[Any, List[float]]:
+def run_func_recursive(func: Callable, *args: Tuple, **kwargs: Dict) -> Any:
+    """
+    Run the given function that has been determined as recursive with the provided arguments and keyword arguments.
+    Args:
+        func (Callable): The function to be executed.
+        *args (Tuple): Positional arguments to be passed to the function.
+        **kwargs (Dict): Keyword arguments to be passed to the function.
+    Returns:
+        Any: The result of the function execution.
+    Note:
+        This function does not catch any errors.
+    """
+    # Don't try to catch any errors here since the problem should be handled in the user's function or is already handled in the concurrent executor
+    return func(*args, **kwargs)
+
+
+def run_func_main_process(func: Callable, run_times: int, *args: Tuple, **kwargs: Dict) -> Tuple[Any, List[float]]:
     """
     Run and measure the execution time of a function in the main process. It also returns the value of the function return and the execution times.
     Args:
@@ -210,18 +264,14 @@ def tempit_main_process(func: Callable, run_times: int, *args: Tuple, **kwargs: 
     total_times: List[float] = []
     for _ in range(run_times):
         start_time: float = time.perf_counter()
-        try:
-            result = func(*args, **kwargs)
-        except Exception as e:
-            show_error(e, filename=__file__)
-            result = None
-        finally:
-            end_time: float = time.perf_counter()
-            total_times.append((end_time - start_time))
+        # Don't try to catch any errors here since the problem should be handled in the user's function
+        result: Any = func(*args, **kwargs)
+        end_time: float = time.perf_counter()
+        total_times.append((end_time - start_time))
     return result, total_times
 
 
-def tempit_with_concurrency(func: Callable, run_times: int, *args: Tuple, **kwargs: Dict) -> Tuple[Any, List[float]]:
+def run_func_concurrency(func: Callable, run_times: int, *args: Tuple, **kwargs: Dict) -> Tuple[Any, List[float]]:
     """
     Executes a given function concurrently a specified number of times using joblib.
 
@@ -233,66 +283,50 @@ def tempit_with_concurrency(func: Callable, run_times: int, *args: Tuple, **kwar
 
     Returns:
         Tuple[Any, List[float]]: A tuple containing the result of the function and a list of execution times for each run.
-        If an exception was raised in one of the concurrent tasks, the function will raise a RuntimeError and returns control
+
+    Raises:
+        RuntimeError: If an exception was raised in one of the concurrent tasks. If an exception was raised in one of the concurrent tasks, the function will raise a RuntimeError and returns control
         to the main process, then the function will be executed in the main process non-concurrently.
     """
 
     from multiprocessing import current_process
-    from os import cpu_count
     from pickle import PicklingError
     from threading import current_thread
 
     from joblib import Parallel, delayed
 
-    def run_func(
-        func: Callable,
-        *args: Tuple,
-        **kwargs: Dict,
-    ) -> Tuple[Any, float, bool]:
-        has_crashed: bool = False
-        start_time = time.perf_counter()
-        try:
-            result: Any = func(*args, **kwargs)
-        except Exception:
-            has_crashed = True
-            result = None
-        finally:
-            end_time = time.perf_counter()
-        return result, end_time - start_time, has_crashed
-
-    EXCEPTION_MESSAGE = (
+    EXCEPTION_MESSAGE: str = (
         "An exception was raised in one of the concurrent jobs. Trying to execute in the main process non-concurrently."
     )
-
     joblib_backend = None  # Default backend for joblib
-    # Rule of thumb, use at least 2 workers or at least the number of cores minus 1.
-    # It is not ideal for multithreading, but it will make good balance
-    workers: int = max(2, cpu_count() - 1) if cpu_count() is not None else 2  # type: ignore
+    # Rule of thumb, use all the cores but 1.
+    # It is not ideal for multithreading with large I/O operations, but it will make good balance
+    workers: int = -2  # This is how joblib says to use all the cores but 1
 
     if current_process().name != "MainProcess" or current_thread().name != "MainThread":
         joblib_backend = "threading"  # If we are running in other than the main process or main thread, use threading instead of multiprocessing
 
     try:
+        start_time: float = time.perf_counter()
         results: List[Tuple[Any, float, bool]] = Parallel(n_jobs=workers, backend=joblib_backend)(
-            delayed(run_func)(func, *args, **kwargs) for _ in range(run_times)
+            delayed(func)(*args, **kwargs) for _ in range(run_times)
         )  # type: ignore
+        end_time: float = time.perf_counter()
 
     except PicklingError:  # If a pickle error is raised, use threading instead of multiprocessing
         joblib_backend = "threading"
         try:
+            start_time: float = time.perf_counter()
             results: List[Tuple[Any, float, bool]] = Parallel(n_jobs=workers, backend=joblib_backend, prefer="threads")(
-                delayed(run_func)(func, *args, **kwargs) for _ in range(run_times)
+                delayed(func)(*args, **kwargs) for _ in range(run_times)
             )  # type: ignore
-
+            end_time: float = time.perf_counter()
         except Exception:
             raise RuntimeError(EXCEPTION_MESSAGE)
 
     except Exception:
         raise RuntimeError(EXCEPTION_MESSAGE)
 
-    if any(has_crashed for _, _, has_crashed in results):  # This code will be deprecated soon
-        raise RuntimeError(EXCEPTION_MESSAGE)
-
-    total_times = [total_time for _, total_time, has_crashed in results if not has_crashed]
-    result = results[0][0]
-    return result, total_times
+    average_runtimes: float = (end_time - start_time) / run_times
+    total_times: List[float] = [average_runtimes] * run_times
+    return results[0], total_times
