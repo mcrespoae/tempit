@@ -60,8 +60,8 @@ def tempit_5times():
     time.sleep(0.01)
 
 
-@tempit(run_times=5, concurrent_execution=True, verbose=True)
-def tempit_5times_verbose():
+@tempit(run_times=100, concurrent_execution=True, verbose=True)
+def tempit_max_times_verbose():
     time.sleep(0.01)
 
 
@@ -181,8 +181,8 @@ def main():
 
     print("Concurrency 5 times")
     tempit_5times()
-    print("Concurrency 5 times verbose")
-    tempit_5times_verbose()
+    print("Concurrency max times verbose")
+    tempit_max_times_verbose()
     print("Non concurrent 5 times verbose")
     tempit_5times_sequential_verbose()
     print("Multithreading crash non class")

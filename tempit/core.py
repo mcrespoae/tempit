@@ -298,9 +298,10 @@ def run_func_concurrency(func: Callable, run_times: int, *args: Tuple, **kwargs:
     if num_cores:
         available_cpu_cores = max(1, num_cores - 1)
         if run_times > available_cpu_cores:
-            run_times = available_cpu_cores
-            warning_msg = f"The number of CPU cores is {available_cpu_cores}. The number of runs will be reduced to {run_times} to maximize parallelism."
+
+            warning_msg = f"Available cpu cores to use: {available_cpu_cores}. The {run_times} number of runs will be reduced to {available_cpu_cores} in order to maximize parallelism."
             warnings.warn(warning_msg)
+            run_times = available_cpu_cores
             if run_times == 1:
                 raise RuntimeError("Run times=1 found while running in concurrency. Switching to sequential execution.")
 
