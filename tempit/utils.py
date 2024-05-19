@@ -1,3 +1,4 @@
+import traceback
 from statistics import mean, median, stdev
 from typing import Callable, Dict, List, Tuple
 
@@ -18,7 +19,7 @@ def print_tempit_values(
         verbose (bool): Whether to print verbose information.
         func (Callable): The function to print the values for.
         total_times (List[float]): The total execution times for each run of the function.
-        real_time (float): The real time taken to execute the function.
+        real_time (float): The real time taken to execute the function, including time spent in non-func related code.
         *args (Tuple): Additional positional arguments to pass to the function.
         **kwargs (Dict): Additional keyword arguments to pass to the function.
     Returns:
@@ -143,3 +144,33 @@ def format_time(total_time: float) -> str:
         seconds = total_time % 60
         ms = seconds % 1 * 1000
         return f"{days}d:{hours:02}h:{minutes:02}m:{seconds:02.0f}s.{ms:.0f}ms"
+
+
+def show_error(e: Exception, filename: str = __file__) -> None:
+    """
+    Print the error message and the line number where it occurred.
+
+    Parameters:
+        e (Exception): The exception object.
+
+    Returns:
+        None
+    """
+    tb_level: int = 0
+    tb: List = traceback.extract_tb(e.__traceback__)
+    inside: bool = False
+    print(e.__class__.__name__, e)
+    while True:
+        if tb_level >= len(tb):
+            break
+        filename_err, lineno, funcname, line = tb[tb_level]
+        tb_level += 1
+
+        if filename_err.lower() == filename.lower():
+            print(f"In file, {filename_err}, at line {lineno}, in function {funcname}, {line.strip()}")
+            inside = True
+            continue
+        if filename_err.lower() != filename.lower() and inside:
+            break
+
+    print(f"In file, {filename_err}, at line {lineno}, in function {funcname}, {line.strip()}")

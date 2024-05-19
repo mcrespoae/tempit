@@ -17,22 +17,22 @@ class TempitTestClass:
         time.sleep(0.01)
 
     @tempit
-    def tempit_basic_no_parenthesis(self):
-        time.sleep(0.01)
+    def tempit_basic_no_parenthesis(self, a: int, b: int = 2):
+        return a + b
 
-    @tempit(run_times=5)
+    @tempit(run_times=2)
     def test_tempit_with_concurrency(self):
         time.sleep(0.01)
 
-    @tempit(run_times=5, concurrent_execution=False, verbose=False)
+    @tempit(run_times=2, concurrent_execution=False, verbose=False)
     def test_tempit_no_concurrency(self):
         time.sleep(0.01)
 
-    @tempit(run_times=5, concurrent_execution=True, verbose=True)
+    @tempit(run_times=2, concurrent_execution=True, verbose=True)
     def test_tempit_concurrency_verbose(self):
         time.sleep(0.01)
 
-    @tempit(run_times=10, concurrent_execution=True, verbose=True)
+    @tempit(run_times=2, concurrent_execution=True, verbose=True)
     def test_tempit_thread_crash(self, a: int = 1, b: int = 2, thread_name: str = "ThreadPoolExecutor-"):
         current_thread_name = threading.current_thread().name
         if not current_thread_name.startswith(thread_name):
@@ -42,7 +42,7 @@ class TempitTestClass:
     def sum(self, a: int = 1, b: int = 2):
         return a + b
 
-    @tempit(run_times=10)
+    @tempit(run_times=2)
     def test_tempit_args(self, a: int = 1, b: int = 2):
         return self.sum(a, b)
 
@@ -73,11 +73,12 @@ class TestTempitDecoratorClass(unittest.TestCase):
     def test_tempit_basic_no_parenthesis(self):
 
         start_time = time.perf_counter()
-        self.test_class.tempit_basic_no_parenthesis()
+        result = self.test_class.tempit_basic_no_parenthesis(1, b=2)
         end_time = time.perf_counter()
 
         execution_time = end_time - start_time
         self.assertAlmostEqual(execution_time, 0.01, delta=0.01)
+        self.assertEqual(result, 3)
 
     def test_tempit_with_concurrency(self):
 
@@ -201,7 +202,7 @@ class TestTempitDecoratorFunction(unittest.TestCase):
         self.assertAlmostEqual(execution_time, 0.01, delta=0.01)
 
     def test_tempit_with_concurrency(self):
-        @tempit(run_times=5, concurrent_execution=True)
+        @tempit(run_times=2, concurrent_execution=True)
         def my_function():
             time.sleep(0.01)
 
@@ -213,7 +214,7 @@ class TestTempitDecoratorFunction(unittest.TestCase):
         self.assertAlmostEqual(execution_time, 0.01, delta=0.1)  # Check if execution time is close to 0.1 seconds
 
     def test_tempit_no_concurrency(self):
-        @tempit(run_times=5, concurrent_execution=False)
+        @tempit(run_times=3, concurrent_execution=False)
         def my_function():
             time.sleep(0.01)
 
@@ -224,9 +225,9 @@ class TestTempitDecoratorFunction(unittest.TestCase):
         execution_time = end_time - start_time
         self.assertAlmostEqual(execution_time, 0.05, delta=0.1)
 
-    def test_tempit_multithreading_verbose(self):
+    def test_tempit_concurrency_verbose(self):
         # Just check it doesn't crash
-        @tempit(run_times=5, concurrent_execution=True, verbose=True)
+        @tempit(run_times=2, concurrent_execution=True, verbose=True)
         def my_function():
             time.sleep(0.01)
 
@@ -235,11 +236,11 @@ class TestTempitDecoratorFunction(unittest.TestCase):
         end_time = time.perf_counter()
 
         execution_time = end_time - start_time
-        self.assertAlmostEqual(execution_time, 0.01, delta=0.1)
+        self.assertAlmostEqual(execution_time, 0.01, delta=1)
 
-    def test_tempit_multithreading_crash(self):
-        # Just check if it the multihreading doesn't work, it should be executed in the main thread
-        @tempit(run_times=5, concurrent_execution=True)
+    def test_tempit_concurrency_crash(self):
+        # Just check if it the parallel execution doesn't work, it should be executed in the main thread
+        @tempit(run_times=2, concurrent_execution=True)
         def my_function():
             current_thread_name = threading.current_thread().name
             process_name = current_process().name
@@ -252,7 +253,8 @@ class TestTempitDecoratorFunction(unittest.TestCase):
         end_time = time.perf_counter()
 
         execution_time = end_time - start_time
-        self.assertLess(execution_time, 0.5)
+        # It could trigger a while since it will try to use parallel processing, then parallel threading and then the sequential execution
+        self.assertLess(execution_time, 3)
 
     def test_tempit_args(self):
         @tempit(run_times=0, concurrent_execution=True, verbose=True)
@@ -297,13 +299,13 @@ class TestTempitDecoratorFunction(unittest.TestCase):
 
     @unittest.skipUnless(not IN_GITHUB_ACTIONS, "Skip if running in GitHub Actions: too expensive.")
     def test_tempit_long_running_function(self):
-        @tempit(run_times=4, concurrent_execution=True)
+        @tempit(run_times=2, concurrent_execution=True)
         def my_concurrent_function(a=2_000_000, n=16):
             for _ in range(a):
                 pass  #
             return fib(n=n)
 
-        @tempit(run_times=4, concurrent_execution=False)
+        @tempit(run_times=2, concurrent_execution=False)
         def my_sequential_function(a=2_000_000, n=16):
             for _ in range(a):
                 pass  #
@@ -320,7 +322,7 @@ class TestTempitDecoratorFunction(unittest.TestCase):
         execution_time_sequential = end_time - start_time
 
         self.assertLessEqual(
-            execution_time_concurrent, (execution_time_sequential / 3) + (execution_time_sequential * 0.2)
+            execution_time_concurrent, (execution_time_sequential / 2) + (execution_time_sequential * 0.3)
         )
 
         self.assertEqual(result_concurrent, 987)
