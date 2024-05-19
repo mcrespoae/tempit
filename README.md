@@ -6,11 +6,11 @@
 
 ## Overview
 
-Tempit is a Python package designed to simplify the process of measuring the execution time of your functions through a straightforward decorator.
+`tempit` is a Python package designed to simplify the process of measuring the execution time of your functions through a straightforward decorator.
 
 ## Installation
 
-You can install Tempit using pip:
+You can install `tempit` using pip:
 
 ```bash
 pip install tempit
@@ -20,7 +20,7 @@ pip install tempit
 
 Tempit decorator should only be used for benchmarking; it is not intended for production code.
 
-Below are some examples demonstrating Tempit's usage:
+Below are some examples demonstrating `tempit`'s usage:
 
 ### Basic Usage
 
@@ -81,28 +81,38 @@ More examples can be found in the [examples.py](https://github.com/mcrespoae/tem
 - Parallel execution mode for performance measurement.
 - Human-readable time formatting.
 - Optional verbose mode for detailed information.
-- Optional recursion checker.
+- Automatic recursion checker.
 
 ## Parameters
 
-Using the decorator @tempit without any parameters executes the function once and displays the execution time. However, you can enhance the experience using the following arguments:
+Using the decorator `@tempit` without any parameters executes the function once and displays the execution time. However, you can enhance the experience using the following arguments:
 
 - `run_times` (int, optional): Specifies the number of function executions. Defaults to 1.
-- `concurrency_mode` (bool, optional): Determines the concurrency mode for the function execution. It uses [joblib](https://pypi.org/project/joblib/) for parallel computing. The  default execution backend is "loky" but if the function is being triggered other than the main thread or main process, the backend will be changed to multithreading to aovid pickle errors. If, for any other reason, fails, the program will try to execute the func run_times non concurrently in the main process. Defaults to True.
+- `concurrency_mode` (bool, optional): Determines the concurrency mode for the function execution. It uses [joblib](https://pypi.org/project/joblib/) for parallel computing. Defaults to True. **Will be changed to False as default in v.0.2.0**
 - `verbose` (bool, optional): Controls whether detailed information is printed after execution. Defaults to False.
-- `check_for_recursion` (bool, optional): Checks for recursion in the decorated function. Please, read the [Recursive functions](#recursive-functions) for detailed information. Defaults to False.
+- `check_for_recursion` ~~(bool, optional):~~ Will be **DEPRECRATED in v0.2.0**. ~~Checks for recursion in the decorated function~~. Please, read the [Recursive functions](#recursive-functions) for detailed information. Defaults to False.
+
+## Best practices
+
+The ideal way to use this package is by applying the decorator to the functions you want to measure and running them side by side to compare the results more easily.
+
+- If you want to measure several times to get an average, you can use the `run_times` parameter.
+
+- For more precise time execution, it is recommended to set `concurrency_mode` to `False`. Please see the [Concurrency](#concurrency) section to understand the limitations of concurrency.
+
+- Recursive functions should be encapsulated for better benchmarking. Please refer to the [Recursive functions](#recursive-functions) section to to learn more about recursion and `tempit`.
+
+- Avoid decorating classes directly, as a `PicklingError` may occur if the class is then instantiated in another process. For more information, please see the [Decorating classes that could be instantiated in another processes](#decorating-classes-that-could-be-instantiated-in-another-processes) in the [Other Limitations](#other-limitations) section.
 
 ## Recursive functions
 
-Measuring the time of recursive functions using decorators can be tricky due to potential verbosity in output. Using recursive functions with this package may result in very verbose output (one per each recursive call plus the original one), making it difficult to read.
+Measuring the execution time of recursive functions using decorators can be challenging due to potential verbosity in the output. This package offers an automatic recursion detection feature, but it is strongly recommended to use the [encapsulating the recursive function](#encapsulating-the-recursive-function) solution for cleaner, more precise and safer results.
 
-There are two potential solutions for this issue, [use the recursion detector](#using-the-check_for_recursion-parameter) or [encapsulating the recursive function](#encapsulating-the-recursive-function).
+### Using the autio recursion feature
 
-### Using the `check_for_recursion` parameter
+The auto recursion feature detects recursion in the decorated function by checking the parent call function. If recursion is found, it will only output the time taken to run the appropriate function, plus an overhead. It is not recommended to rely on this feature intentionally since the collected time data will not be accurate and the process will take longer.
 
-If you're aware that your function utilizes recursion, you can use the `check_for_recursion` parameter.
-
-Activating this option has some overhead in performance but it enables users to decorate recursive functions with a clean output.
+This feature is intended for passive use in case the user forgets to encapsulate the recursive function or for non-accurate comparisons.
 
 ```python
 @tempit(run_times=3, concurrent_execution=True, verbose=False, check_for_recursion=True)
@@ -119,7 +129,7 @@ result = recursive_func(3)
 
 ### Encapsulating the recursive function
 
-Another option is to encapsulate the recursive function within another function then, decorate and call the parent function. Here's an example:
+The recommended option is to encapsulate the recursive function within another function then, decorate and call the parent function. Here's an example:
 
 ```python
 @tempit
@@ -139,15 +149,55 @@ result = encapsulated_recursive_function(3)
 
 This approach enhances readability without incurring any performance penalties. However, its main drawback is that users must modify their code to measure this type of function.
 
-## Limitations
+## Concurrency
+
+### How concurrency works in timeit
+
+`tempit` uses [joblib](https://pypi.org/project/joblib/) for parallel computing. By default, the execution backend is "loky". If a `PicklingError` occurs while trying to execute the decorated function, `tempit` switches the backend to "threading" and retries the execution. If any other error occurs with "loky" or "threading", `tempit` falls back to sequential execution, discarding the joblib option.
+
+The "threading" backend is chosen if `tempit` is detected to be running outside the MainProcess or MainThread.
+
+The number of workers for any parallel execution is `num_processors - 1`. While this may not always be the optimal approach (especially for multithreading with large I/O operations), simplicity of use has been prioritized over complexity for this decorator.
+
+Additionally, if the `run_times` parameter exceeds `num_processors - 1`, it will be downsized to match the number of available processors minus one to maximize parallelization. Finally, if `tempit` detects that it is running in concurrency mode and finds that the downsized `run_times` is equal to 1, `tempit` falls back to sequential execution, discarding the joblib option.
+
+### Concurrency caveats
+
+There are some caveats when using parallel computing. Creating a process or thread incurs overhead, so it's normal to find that for very low CPU-intensive functions, the concurrent mode may be slower than the sequential one. However, as the functions become more CPU-intensive, concurrency usually results in faster execution times.
+
+That being said, timings measured when using concurrent executions may not be as accurate as those in sequential mode.
+
+## Other limitations
+
+### Decorating classes that could be instantiated in another processes
 
 While this package generally delivers excellent performance and reliability, it's essential to be aware of certain scenarios where using the `tempit` decorator could lead to unexpected behavior or crashes:
 
-- If a class is decorated with tempit, and subsequently, a new process is spawned after creating an instance of the class, calling a method within the newly created process may result in a `PicklingError`.
+- If a class is decorated with `tempit`, and subsequently, a new process is spawned after creating an instance of the class, calling a method within the newly created process may result in a `PicklingError`.
 
 This limitation arises due to how Python's pickling mechanism handles decorated classes and processes. When a decorated class instance is pickled for use in a separate process, inconsistencies in object references can occur, leading to pickling failures.
 
-To mitigate this issue, consider redesigning your application logic to avoid decorating classes that are used within processes spawned later in the program's execution. Alternatively, explore alternative serialization approaches or use dill or other serialization libraries that offer more robust handling of complex object hierarchies.
+To mitigate this issue, avoid decorating classes that will be used in processes spawned later in the program's execution.
+
+### Zero values
+
+In some rare cases where multiple recursively decorated functions are called nested within each other, `tempit` may return two values, with one being zero.
+
+## Error managment and warnings
+
+### Errors
+
+If an error occurs while executing the decorated function in sequential mode or within a recursively decorated function, the error will be propagated to the user's function.
+
+### Warnings
+
+- Deprecation warnings will be added before removing a feature.
+
+- Decorated classes will rise a warning to inform the user about the potential issues described in [Decorating classes that could be instantiated in another processes](#decorating-classes-that-could-be-instantiated-in-another-processes) section.
+
+- If the `run_times` parameter exceeds `num_processors - 1`, it will be downsized to match the number of available processors minus one to maximize parallelization.
+
+- If recursion has been detected, a warning will be promted. If so, please, go to [Recursive functions](#recursive-functions).
 
 ## Contributing
 
@@ -159,6 +209,8 @@ Contributions are welcome! Please follow these guidelines when contributing:
 4. Implement your changes and commit them.
 5. Push your changes to your forked repository.
 6. Submit a pull request.
+
+You can also open an issue if you find a bug or have a suggestion.
 
 You can test your code using `make test` and `make example` to trigger the examples. Please, check the [Makefile](https://github.com/mcrespoae/tempit/blob/main/Makefile) to know more about commands.
 

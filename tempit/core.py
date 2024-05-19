@@ -208,15 +208,6 @@ def function_execution(
     if inspect.isclass(callable_func):
         pass  # TODO: Add proper support for class decorators
 
-        # def class_wrapper(*args, **kwargs):
-        #    return callable_func(*args, **kwargs)
-
-        # callable_func.__init__ = class_wrapper
-        # is_method = hasattr(args[0], callable_func.__name__) if args else False
-        # print(is_method)
-
-        # return callable_func, [0], 0
-
     if run_times < 1:
         run_times = 1
     start_time: float = time.perf_counter()
@@ -225,9 +216,9 @@ def function_execution(
             result, total_times = run_func_concurrency(callable_func, run_times, *args, **kwargs)
         except RuntimeError as e:
             show_error(e, filename=__file__)
-            result, total_times = run_func_main_process(callable_func, run_times, *args, **kwargs)
+            result, total_times = run_func_sequential(callable_func, run_times, *args, **kwargs)
     else:
-        result, total_times = run_func_main_process(callable_func, run_times, *args, **kwargs)
+        result, total_times = run_func_sequential(callable_func, run_times, *args, **kwargs)
     end_time: float = time.perf_counter()
     real_time: float = end_time - start_time
     return result, total_times, real_time
@@ -249,9 +240,9 @@ def run_func_recursive(func: Callable, *args: Tuple, **kwargs: Dict) -> Any:
     return func(*args, **kwargs)
 
 
-def run_func_main_process(func: Callable, run_times: int, *args: Tuple, **kwargs: Dict) -> Tuple[Any, List[float]]:
+def run_func_sequential(func: Callable, run_times: int, *args: Tuple, **kwargs: Dict) -> Tuple[Any, List[float]]:
     """
-    Run and measure the execution time of a function in the main process. It also returns the value of the function return and the execution times.
+    Run and measure the execution time of a function sequentially. It also returns the value of the function return and the execution times.
     Args:
         func (Callable): The function to be executed.
         run_times (int): The number of times the function should be executed.
@@ -290,18 +281,28 @@ def run_func_concurrency(func: Callable, run_times: int, *args: Tuple, **kwargs:
     """
 
     from multiprocessing import current_process
+    from os import cpu_count
     from pickle import PicklingError
     from threading import current_thread
 
     from joblib import Parallel, delayed
 
-    EXCEPTION_MESSAGE: str = (
+    EXCEPTION_MSG: str = (
         "An exception was raised in one of the concurrent jobs. Trying to execute in the main process non-concurrently."
     )
     joblib_backend = None  # Default backend for joblib
     # Rule of thumb, use all the cores but 1.
     # It is not ideal for multithreading with large I/O operations, but it will make good balance
     workers: int = -2  # This is how joblib says to use all the cores but 1
+    num_cores: int | None = cpu_count()
+    if num_cores:
+        available_cpu_cores = max(1, num_cores - 1)
+        if run_times > available_cpu_cores:
+            run_times = available_cpu_cores
+            warning_msg = f"The number of CPU cores is {available_cpu_cores}. The number of runs will be reduced to {run_times} to maximize parallelism."
+            warnings.warn(warning_msg)
+            if run_times == 1:
+                raise RuntimeError("Run times=1 found while running in concurrency. Switching to sequential execution.")
 
     if current_process().name != "MainProcess" or current_thread().name != "MainThread":
         joblib_backend = "threading"  # If we are running in other than the main process or main thread, use threading instead of multiprocessing
@@ -322,10 +323,10 @@ def run_func_concurrency(func: Callable, run_times: int, *args: Tuple, **kwargs:
             )  # type: ignore
             end_time: float = time.perf_counter()
         except Exception:
-            raise RuntimeError(EXCEPTION_MESSAGE)
+            raise RuntimeError(EXCEPTION_MSG)
 
     except Exception:
-        raise RuntimeError(EXCEPTION_MESSAGE)
+        raise RuntimeError(EXCEPTION_MSG)
 
     average_runtimes: float = (end_time - start_time) / run_times
     total_times: List[float] = [average_runtimes] * run_times

@@ -118,7 +118,7 @@ def wrapped_recursive_func(n):
             return n
         return recursive_func_wr(n - 2) + recursive_func_wr(n - 1)
 
-    return recursive_func(n)
+    return recursive_func_wr(n)
 
 
 @tempit(run_times=1, concurrent_execution=True, verbose=False)
@@ -128,6 +128,7 @@ def tempit_with_recursive_func(n):
 
 @tempit(run_times=0, verbose=True)
 def main():
+
     test_class = TempitTestClass()
 
     print("---CLASS EXAMPLES---")
