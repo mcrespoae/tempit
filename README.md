@@ -59,7 +59,7 @@ This will provide detailed output:
 ```text
 ***** tempit data for function my_function_with_args: *****
 Function name: my_function_with_args
-        Funcion object: <function my_function_with_args at 0x0000000000000000>
+        Function object: <function my_function_with_args at 0x0000000000000000>
         Args: (1,)
         Kwargs: {'b': 2}
         Run times: 20
@@ -118,7 +118,7 @@ The ideal way to use this package is by applying the decorator to the functions 
 
 ## Recursive functions
 
-Measuring the execution time of recursive functions using decorators can be challenging due to potential verbosity in the output. This package offers an automatic recursion detection feature, but it is strongly recommended to use the [encapsulating the recursive function](#encapsulating-the-recursive-function) solution for cleaner, more precise and safer results.
+Measuring the execution time of recursive functions using decorators can be challenging due to potential verbosity in the output. This package offers an automatic recursion detection feature, but it is strongly recommended to use the [encapsulating the recursive function](#encapsulating-the-recursive-function) solution for cleaner, more precise, and safer results.
 
 ### Using the auto recursion feature
 
