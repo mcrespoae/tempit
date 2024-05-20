@@ -47,7 +47,7 @@ def print_verbose_common_parts(func: Callable, *args: Tuple, **kwargs: Dict) -> 
         None
     """
     print(f"Function name: {func.__name__}")
-    print(f"\tFuncion object: {func}")
+    print(f'"Function object: {func}')
     print(f"\tArgs: {args}")
     print(f"\tKwargs: {kwargs}")
 
