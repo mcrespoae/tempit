@@ -288,7 +288,7 @@ class TestTempitDecoratorFunction(unittest.TestCase):
         self.assertEqual(result, 3)
 
     def test_recursive(self):
-        @tempit(run_times=2, concurrent_execution=True, verbose=True, check_for_recursion=True)
+        @tempit(run_times=2, concurrent_execution=True, verbose=True)
         def my_function(n: int = 10):
             if n < 2:
                 return n
