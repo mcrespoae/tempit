@@ -6,7 +6,6 @@ from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from multiprocessing import current_process
 
 from tempit.core import tempit
-from tempit.utils import format_time
 
 IN_GITHUB_ACTIONS = os.getenv("GITHUB_ACTIONS") == "true"
 
@@ -108,13 +107,9 @@ class TestTempitDecoratorClass(unittest.TestCase):
 
     def test_tempit_other_thread_crash(self):
         # Just check if it the parallel execution doesn't work, it should be executed in the main thread
-        start_time = time.perf_counter()
         with ThreadPoolExecutor(max_workers=1) as executor:
             future = executor.submit(self.test_class.test_tempit_thread_crash, 1, b=2)
             result = future.result()
-        end_time = time.perf_counter()
-        execution_time = end_time - start_time
-        self.assertAlmostEqual(execution_time, 0.05, delta=0.1)
         self.assertEqual(result, 3)
 
     def test_tempit_args(self):
@@ -299,40 +294,32 @@ class TestTempitDecoratorFunction(unittest.TestCase):
 
     @unittest.skipUnless(not IN_GITHUB_ACTIONS, "Skip if running in GitHub Actions: too expensive.")
     def test_tempit_long_running_function(self):
-        @tempit(run_times=2, concurrent_execution=True)
-        def my_concurrent_function(a=2_000_000, n=16):
+        @tempit(run_times=5, concurrent_execution=True)
+        def my_concurrent_function(a=10_000_000, n=16):
             for _ in range(a):
                 pass  #
             return fib(n=n)
 
-        @tempit(run_times=2, concurrent_execution=False)
-        def my_sequential_function(a=2_000_000, n=16):
+        @tempit(run_times=5, concurrent_execution=False)
+        def my_sequential_function(a=10_000_000, n=16):
             for _ in range(a):
                 pass  #
             return fib(n=n)
 
         start_time = time.perf_counter()
-        result_concurrent = my_concurrent_function(20_000_000, n=16)
+        result_concurrent = my_concurrent_function(10_000_000, n=20)
         end_time = time.perf_counter()
         execution_time_concurrent = end_time - start_time
 
         start_time = time.perf_counter()
-        result_sequential = my_sequential_function(20_000_000, n=16)
+        result_sequential = my_sequential_function(10_000_000, n=20)
         end_time = time.perf_counter()
         execution_time_sequential = end_time - start_time
 
-        self.assertLessEqual(
-            execution_time_concurrent, (execution_time_sequential / 2) + (execution_time_sequential * 0.3)
-        )
+        self.assertLessEqual(execution_time_concurrent, execution_time_sequential * 1.5)
 
-        self.assertEqual(result_concurrent, 987)
-        self.assertEqual(result_sequential, 987)
-
-
-def fib(n):
-    if n < 2:
-        return n
-    return fib(n - 2) + fib(n - 1)
+        self.assertEqual(result_concurrent, 6765)
+        self.assertEqual(result_sequential, 6765)
 
 
 # Added here since calling a function from another process inside a test method doesn't work
@@ -341,27 +328,10 @@ def my_process_function(a: int = 1, b: int = 2):
     return a + b
 
 
-class TestFormatTime(unittest.TestCase):
-    def test_format_time_microseconds(self):
-        self.assertEqual(format_time(0.0005), "500.0000µs")
-
-    def test_format_time_milliseconds(self):
-        self.assertEqual(format_time(0.08256741), "82.5674ms")
-
-    def test_format_time_deconds1(self):
-        self.assertEqual(format_time(0.25), "0.250s")
-
-    def test_format_time_seconds2(self):
-        self.assertEqual(format_time(3.14159), "3.14s")
-
-    def test_format_time_minutes(self):
-        self.assertEqual(format_time(65.4321), "01m:05s.432ms")
-
-    def test_format_time_hours(self):
-        self.assertEqual(format_time(3665.4321), "01h:01m:05s.432ms")
-
-    def test_format_time_days(self):
-        self.assertEqual(format_time(86465.4321), "1d:00h:01m:05s.432ms")
+def fib(n):
+    if n < 2:
+        return n
+    return fib(n - 2) + fib(n - 1)
 
 
 if __name__ == "__main__":

@@ -1,3 +1,3 @@
-from .core import tempit
+from .core import TempitConfig, tempit
 
-__all__ = ["tempit"]
+__all__ = ["tempit", "TempitConfig"]

@@ -1,4 +1,5 @@
 import traceback
+import warnings
 from statistics import mean, median, stdev
 from typing import Callable, Dict, List, Tuple
 
@@ -159,18 +160,46 @@ def show_error(e: Exception, filename: str = __file__) -> None:
     tb_level: int = 0
     tb: List = traceback.extract_tb(e.__traceback__)
     inside: bool = False
-    print(e.__class__.__name__, e)
+    print(e.__class__.__name__)
+    print(e)
+
     while True:
         if tb_level >= len(tb):
+            if inside:
+                return
             break
-        filename_err, lineno, funcname, line = tb[tb_level]
+        filename_err, lineno, funcname, _ = tb[tb_level]
         tb_level += 1
 
         if filename_err.lower() == filename.lower():
-            print(f"In file, {filename_err}, at line {lineno}, in function {funcname}, {line.strip()}")
+            print(f"In file, {filename_err}, at line {lineno}, in function {funcname}")
             inside = True
             continue
         if filename_err.lower() != filename.lower() and inside:
             break
 
-    print(f"In file, {filename_err}, at line {lineno}, in function {funcname}, {line.strip()}")
+    print(f"In file, {filename_err}, at line {lineno}, in function {funcname}")
+
+
+def adjust_run_times_for_parallelism(run_times: int) -> int:
+    """
+    Adjusts the number of runs to maximize parallelism based on available CPU cores.
+
+    Args:
+        run_times (int): The original number of runs. Expected to be bigger than 1.
+
+    Returns:
+        int: The adjusted number of runs.
+    """
+    from os import cpu_count
+
+    num_cores: int | None = cpu_count()
+    if num_cores:
+        available_cpu_cores = max(1, num_cores - 1)
+        if run_times > available_cpu_cores:
+            warning_msg = f"Available cpu cores to use: {available_cpu_cores}. The {run_times} number of runs will be reduced to {available_cpu_cores} in order to maximize parallelism."
+            warnings.warn(warning_msg)
+            run_times = available_cpu_cores
+    if run_times <= 1:
+        run_times = 1
+    return run_times
