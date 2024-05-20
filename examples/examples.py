@@ -19,6 +19,13 @@ class TempitTestClassWithArgs:
 
 
 @tempit
+class TempitTestClassWithInit:
+    @tempit
+    def __init__(self, a: int = 1, b: int = 2):
+        self.sum = a + b
+
+
+@tempit
 class TempitTestClass:
     @tempit
     def tempit_basic(self, a: int = 1, b: int = 2):
@@ -142,6 +149,7 @@ def tempit_with_recursive_func(n):
 def main():
 
     test_class = TempitTestClass()
+    _ = TempitTestClassWithInit(3, b=6)
 
     print("---CLASS EXAMPLES---")
 

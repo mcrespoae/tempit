@@ -18,18 +18,11 @@ pip install tempit
 
 ## Usage
 
-`tempit` decorator should only be used for benchmarking and is not intended for production code. It is possible to deactivate the usage of `tempit` globally by setting the `TempitConfig.ACTIVE` flag to false as shown below:
-
-```python
-
-from tempit import TempitConfig, tempit
-TempitConfig.ACTIVE = False  # Deactivates the decorator
-
-```
-
-Below are some examples demonstrating `tempit`'s usage:
+Utilizing the `tempit` decorator is simple and intuitive. Follow this section to learn how to make the most of its capabilities.
 
 ### Basic Usage
+
+Below are some examples demonstrating `tempit`'s usage:
 
 ```python
 from tempit import tempit
@@ -49,6 +42,8 @@ Function my_function took 10.5908ms.
 ```
 
 ### Advanced Usage
+
+It is possible to use [Parameters](#parameters) to customize the behavior of the `tempit` decorator, allowing you to tailor its functionality to better suit your specific benchmarking needs. Here is an example of how to use them:
 
 ```python
 from tempit import tempit
@@ -79,6 +74,15 @@ Function name: my_function_with_args
 ```
 
 More examples can be found in the [examples.py](https://github.com/mcrespoae/tempit/blob/main/examples/examples.py) script.
+
+### Timeit in production environments
+
+The `tempit` decorator is designed **exclusively for benchmarking and is not suitable for use in production code**. You can globally deactivate the `tempit` feature by setting the `TempitConfig.ACTIVE` flag to false at the top of your imports. While this will skip the decoration of callables, there may still be a minimal CPU overhead. For production-grade applications, it's recommended to manually remove the decorators and `tempit` imports to maintain optimal performance.
+
+```python
+from tempit import TempitConfig, tempit
+TempitConfig.ACTIVE = False  # Deactivates the decorator
+```
 
 ## Features
 
