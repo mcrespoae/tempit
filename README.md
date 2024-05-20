@@ -102,15 +102,15 @@ The ideal way to use this package is by applying the decorator to the functions 
 
 - Recursive functions should be encapsulated for better benchmarking. Please refer to the [Recursive functions](#recursive-functions) section to to learn more about recursion and `tempit`.
 
-- Avoid decorating classes directly, as a `PicklingError` may occur if the class is then instantiated in another process. For more information, please see the [Decorating classes that could be instantiated in another processes](#decorating-classes-that-could-be-instantiated-in-another-processes) in the [Other Limitations](#other-limitations) section.
+- Avoid decorating classes directly, as a `PicklingError` may occur if the class is then instantiated in another process. For more information, please see the [Decorating classes that could be instantiated in other processes](#decorating-classes-that-could-be-instantiated-in-other-processes) in the [Other Limitations](#other-limitations) section.
 
 ## Recursive functions
 
 Measuring the execution time of recursive functions using decorators can be challenging due to potential verbosity in the output. This package offers an automatic recursion detection feature, but it is strongly recommended to use the [encapsulating the recursive function](#encapsulating-the-recursive-function) solution for cleaner, more precise and safer results.
 
-### Using the autio recursion feature
+### Using the auto recursion feature
 
-The auto recursion feature detects recursion in the decorated function by checking the parent call function. If recursion is found, it will only output the time taken to run the appropriate function, plus an overhead. It is not recommended to rely on this feature intentionally since the collected time data will not be accurate and the process will take longer.
+The auto-recursion feature detects recursion in the decorated function by checking the parent call function. If recursion is found, it will only output the time taken to run the appropriate function, plus an overhead. It is not recommended to rely on this feature intentionally since the collected time data will not be accurate and the process will take longer.
 
 This feature is intended for passive use in case the user forgets to encapsulate the recursive function or for non-accurate comparisons.
 
@@ -129,7 +129,7 @@ result = recursive_func(3)
 
 ### Encapsulating the recursive function
 
-The recommended option is to encapsulate the recursive function within another function then, decorate and call the parent function. Here's an example:
+The recommended option is to encapsulate the recursive function within another function and then, decorate and call the parent function. Here's an example:
 
 ```python
 @tempit
@@ -169,7 +169,7 @@ That being said, timings measured when using concurrent executions may not be as
 
 ## Other limitations
 
-### Decorating classes that could be instantiated in another processes
+### Decorating classes that could be instantiated in other processes
 
 While this package generally delivers excellent performance and reliability, it's essential to be aware of certain scenarios where using the `tempit` decorator could lead to unexpected behavior or crashes:
 
@@ -183,7 +183,7 @@ To mitigate this issue, avoid decorating classes that will be used in processes 
 
 In some rare cases where multiple recursively decorated functions are called nested within each other, `tempit` may return two values, with one being zero.
 
-## Error managment and warnings
+## Error management and warnings
 
 ### Errors
 
@@ -193,18 +193,18 @@ If an error occurs while executing the decorated function in sequential mode or 
 
 - Deprecation warnings will be added before removing a feature.
 
-- Decorated classes will rise a warning to inform the user about the potential issues described in [Decorating classes that could be instantiated in another processes](#decorating-classes-that-could-be-instantiated-in-another-processes) section.
+- Decorated classes will raise a warning to inform the user about the potential issues described in [Decorating classes that could be instantiated in other processes](#decorating-classes-that-could-be-instantiated-in-other-processes) section.
 
 - If the `run_times` parameter exceeds `num_processors - 1`, it will be downsized to match the number of available processors minus one to maximize parallelization.
 
-- If recursion has been detected, a warning will be promted. If so, please, go to [Recursive functions](#recursive-functions).
+- If recursion has been detected, a warning will be prompted. If so, please, go to [Recursive functions](#recursive-functions).
 
 ## Contributing
 
 Contributions are welcome! Please follow these guidelines when contributing:
 
 1. Fork the repository.
-2. Use `make install` to install all depedencies.
+2. Use `make install` to install all dependencies.
 3. Create a new branch for your changes.
 4. Implement your changes and commit them.
 5. Push your changes to your forked repository.
