@@ -5,6 +5,18 @@ from multiprocessing import current_process
 
 from tempit import tempit
 
+# Deactivate the decorator
+# from tempit import TempitConfig
+# TempitConfig.ACTIVE = True  # Activates the decorator. Default option
+# TempitConfig.ACTIVE = False  # Deactivates the decorator
+
+
+@tempit(run_times=1)
+class TempitTestClassWithArgs:
+    @tempit
+    def tempit_basic(self, a: int = 1, b: int = 2):
+        return a + b
+
 
 @tempit
 class TempitTestClass:
@@ -134,7 +146,7 @@ def main():
     print("---CLASS EXAMPLES---")
 
     print("Once in class basic")
-    _ = test_class.tempit_basic(1, b=2)
+    _ = test_class.tempit_basic(2, b=4)
     print("Concurrency 5 times in class")
     test_class.tempit_5times()
     print("Concurrency 5 times in class verbose")
@@ -144,34 +156,74 @@ def main():
 
     print("Multithreading crash in class")
     # If crash while running in a separate thread or process, the execution will be done in the main thread not concurrently
-    _ = test_class.tempit_5times_multithreading_crash(1, b=2)
+    _ = test_class.tempit_5times_multithreading_crash(2, b=4)
 
     print("Method with args")
-    _ = test_class.args_method(1, b=2)
+    _ = test_class.args_method(2, b=4)
     print("Static method")
-    _ = test_class.static_method(1, b=2)
+    _ = test_class.static_method(2, b=4)
     print("Class method")
-    _, _ = test_class.class_method(1, b=2)
+    _, _ = test_class.class_method(2, b=4)
 
+    new_test_class = TempitTestClassWithArgs()
     # Test with calling the function from another thread and process
     with ThreadPoolExecutor(max_workers=1) as executor:
         print("Other thread methods")
         future_basic_method = executor.submit(test_class.tempit_basic)
-        future_basic_method.result()
-        future_class_method = executor.submit(test_class.class_method, 1, b=2)
+        _ = future_basic_method.result()
+
+        future_class_method = executor.submit(test_class.class_method, 2, b=4)
         _, _ = future_class_method.result()
-        future_static_method = executor.submit(test_class.static_method, 1, b=2)
+
+        future_static_method = executor.submit(test_class.static_method, 2, b=4)
         _ = future_static_method.result()
 
-    if False:  # This crashes at the moment if the class is decorated with @tempit
-        with ProcessPoolExecutor(max_workers=1) as executor:
-            print("Other process methods. This part crashes")
-            future_basic_method = executor.submit(test_class.tempit_basic)
-            future_basic_method.result()
-            future_class_method = executor.submit(test_class.class_method, 1, b=2)
-            _, _ = future_class_method.result()
-            future_static_method = executor.submit(test_class.static_method, 1, b=2)
-            _ = future_static_method.result()
+        future_basic_method = executor.submit(new_test_class.tempit_basic)
+        _ = future_basic_method.result()
+
+        new_test_class = TempitTestClass()
+        future_basic_method = executor.submit(new_test_class.tempit_basic)
+        _ = future_basic_method.result()
+
+        future_class_method = executor.submit(new_test_class.class_method, 2, b=4)
+        _, _ = future_class_method.result()
+
+        future_static_method = executor.submit(new_test_class.static_method, 2, b=4)
+        _ = future_static_method.result()
+
+        new_test_class = TempitTestClassWithArgs()
+        future_basic_method = executor.submit(new_test_class.tempit_basic)
+        _ = future_basic_method.result()
+
+    with ProcessPoolExecutor(max_workers=1) as executor:
+        print("Other process methods.")
+        future_basic_method = executor.submit(test_class.tempit_basic)
+        _ = future_basic_method.result()
+
+        future_class_method = executor.submit(test_class.class_method, 2, b=4)
+        _, _ = future_class_method.result()
+
+        future_static_method = executor.submit(test_class.static_method, 2, b=4)
+        _ = future_static_method.result()
+
+        future_basic_method = executor.submit(new_test_class.tempit_basic)
+        _ = future_basic_method.result()
+
+        new_test_class = TempitTestClass()
+        future_basic_method = executor.submit(new_test_class.tempit_basic)
+        _ = future_basic_method.result()
+
+        future_class_method = executor.submit(new_test_class.class_method, 2, b=4)
+        _, _ = future_class_method.result()
+
+        future_static_method = executor.submit(new_test_class.static_method, 2, b=4)
+        _ = future_static_method.result()
+
+        new_test_class = TempitTestClassWithArgs()
+        future_basic_method = executor.submit(new_test_class.tempit_basic)
+        _ = future_basic_method.result()
+
+    # Test with calling the function from another thread and process
 
     print("---END CLASS EXAMPLES---")
 
@@ -196,19 +248,21 @@ def main():
         print("Other thread methods")
         future_basic_func = executor.submit(tempit_basic)
         future_basic_func.result()
-        future_args_func = executor.submit(args_func, 1, b=2)
+        future_args_func = executor.submit(args_func, 2, b=4)
         _ = future_args_func.result()
 
     with ProcessPoolExecutor(max_workers=1) as executor:
         print("Other process methods")
         future_basic_func = executor.submit(tempit_basic)
         future_basic_func.result()
-        future_args_func = executor.submit(args_func, 1, b=2)
+        future_args_func = executor.submit(args_func, 2, b=4)
         _ = future_args_func.result()
 
     print("---END FUNCTION EXAMPLES---")
     print("---OTHER EXAMPLES---")
+
     _ = recursive_func(10)
+
     _ = wrapped_recursive_func(10)
     _ = tempit_with_recursive_func(10)
     _ = call_long_process_sequential(16)

@@ -6,7 +6,11 @@ from functools import partial, wraps
 from threading import Lock
 from typing import Any, Callable, Dict, List, Tuple
 
-from .utils import print_tempit_values, show_error
+from .utils import adjust_run_times_for_parallelism, print_tempit_values, show_error
+
+
+class TempitConfig:
+    ACTIVE: bool = True
 
 
 def tempit(
@@ -31,6 +35,8 @@ def tempit(
 
     Returns:
         Callable: The decorated function if arguments are provided, otherwise a partial function.
+                    If the callable is a class it will be returned unmodified and will not be decorated.
+                    If the TempitConfig ACTIVE flag is set to false, the callable will be returned without modification and will not be decorated.
 
     Raises:
         RuntimeError: If the concurrency mode fails, the function is executed in the main process.
@@ -54,13 +60,25 @@ def tempit(
         # The decorated function can be used as usual
         result = my_function(arg1_value, arg2_value)
     """
+
+    if not TempitConfig.ACTIVE:
+        # Return the callable unmodified if TempitConfig.ACTIVE is set to False
+        if args:
+            return args[0]
+        else:
+            return lambda f: f
+
     if check_for_recursion is not None:
-        warning_msg = "check_for_recursion is deprecated and will be removed in future versions."
+        warning_msg = "check_for_recursion is deprecated and will be removed in future versions since it is not necessary anymore."
         warnings.warn(warning_msg, DeprecationWarning, stacklevel=2)
 
     def decorator(
         func: Callable, run_times: int = 1, concurrent_execution: bool = True, verbose: bool = False
     ) -> Callable:
+
+        if inspect.isclass(func):
+            # If a class is found, return the class inmediatly since it could raise an exception if triggered from other processes
+            return func
 
         potential_recursion_func_stack: deque[Callable] = deque()
         is_recursive: bool = False
@@ -75,7 +93,7 @@ def tempit(
             run_times_final, concurrent_execution_final, is_recursive = check_is_recursive_func(
                 func, run_times, concurrent_execution, potential_recursion_func_stack
             )
-            callable_func, args, args_to_print = extract_callable_and_args_if_method(func, *args, **kwargs)
+            callable_func, args, args_to_print = extract_callable_and_args_if_method(func, *args)
 
             if is_recursive:  # If the function is recursive, it will be executed directly
                 with time_wasted_lock:  # Update the time non-ocurring in the function execution
@@ -114,7 +132,7 @@ def tempit(
     if args:  # If arguments are not provided, return a decorator
         return decorator(*args)
 
-    else:  # Otherwise, return a partial function
+    else:
         return partial(decorator, run_times=run_times, concurrent_execution=concurrent_execution, verbose=verbose)
 
 
@@ -154,13 +172,12 @@ def check_is_recursive_func(
     return run_times, concurrent_execution, False
 
 
-def extract_callable_and_args_if_method(func: Callable, *args: Tuple, **kwargs: Dict) -> Tuple[Callable, Tuple, Tuple]:
+def extract_callable_and_args_if_method(func: Callable, *args: Tuple) -> Tuple[Callable, Tuple, Tuple]:
     """
     Extracts the callable function and arguments from a given function, if it is a method.
     Args:
         func (Callable): The function to extract the callable from.
         *args: Variable length argument list.
-        **kwargs (Dict): The keyword arguments to be passed to the function.
     Returns:
         Tuple[Callable, Tuple, Tuple]: A tuple containing the extracted callable function, the modified arguments,
         and the arguments to be printed.
@@ -169,16 +186,6 @@ def extract_callable_and_args_if_method(func: Callable, *args: Tuple, **kwargs: 
     callable_func: Callable = func
     args_to_print: Tuple = args
     is_method: bool = hasattr(args[0], func.__name__) if args else False
-    if inspect.isclass(func):
-        # TODO: Add proper support for class decorators
-        # This is calling the class constructor directly. Move it into the execution function. I think it shuold be func.__init__(*args, **kwargs)
-        # class_wrapper = func.__init__(args, kwargs)  # prettier-ignore
-
-        # func.__new__ = class_wrapper
-        # callable_func = func
-        # if isinstance(func, type):
-        warning_msg = "Class decoration detected. It is not recommended to use @tempit with classes that will be triggered from a new process, as it will raise a pickle exception."
-        warnings.warn(warning_msg, stacklevel=3)
 
     if is_method:
         args_to_print = args[1:]
@@ -205,8 +212,6 @@ def function_execution(
         Tuple[Any, List[float], float]: A tuple containing the result of the function,
         a list of execution times for each run, and the total real time taken.
     """
-    if inspect.isclass(callable_func):
-        pass  # TODO: Add proper support for class decorators
 
     if run_times < 1:
         run_times = 1
@@ -277,36 +282,24 @@ def run_func_concurrency(func: Callable, run_times: int, *args: Tuple, **kwargs:
 
     Raises:
         RuntimeError: If an exception was raised in one of the concurrent tasks. If an exception was raised in one of the concurrent tasks, the function will raise a RuntimeError and returns control
-        to the main process, then the function will be executed in the main process non-concurrently.
+        to the main process, then the function will be executed in sequential mode.
+        RuntimeError: If run_times=1 found while running in concurrency. Switching to sequential execution.
     """
 
-    from multiprocessing import current_process
-    from os import cpu_count
     from pickle import PicklingError
-    from threading import current_thread
 
     from joblib import Parallel, delayed
 
     EXCEPTION_MSG: str = (
         "An exception was raised in one of the concurrent jobs. Trying to execute in the main process non-concurrently."
     )
-    joblib_backend = None  # Default backend for joblib
     # Rule of thumb, use all the cores but 1.
     # It is not ideal for multithreading with large I/O operations, but it will make good balance
     workers: int = -2  # This is how joblib says to use all the cores but 1
-    num_cores: int | None = cpu_count()
-    if num_cores:
-        available_cpu_cores = max(1, num_cores - 1)
-        if run_times > available_cpu_cores:
-
-            warning_msg = f"Available cpu cores to use: {available_cpu_cores}. The {run_times} number of runs will be reduced to {available_cpu_cores} in order to maximize parallelism."
-            warnings.warn(warning_msg)
-            run_times = available_cpu_cores
-            if run_times == 1:
-                raise RuntimeError("Run times=1 found while running in concurrency. Switching to sequential execution.")
-
-    if current_process().name != "MainProcess" or current_thread().name != "MainThread":
-        joblib_backend = "threading"  # If we are running in other than the main process or main thread, use threading instead of multiprocessing
+    joblib_backend = get_joblib_backend()
+    run_times = adjust_run_times_for_parallelism(run_times=run_times)
+    if run_times == 1:
+        raise RuntimeError("Run times=1 found while running in concurrency. Switching to sequential execution.")
 
     try:
         start_time: float = time.perf_counter()
@@ -332,3 +325,24 @@ def run_func_concurrency(func: Callable, run_times: int, *args: Tuple, **kwargs:
     average_runtimes: float = (end_time - start_time) / run_times
     total_times: List[float] = [average_runtimes] * run_times
     return results[0], total_times
+
+
+def get_joblib_backend() -> str | None:
+    """
+    Returns the appropriate joblib backend based on the current process and thread.
+    This function checks the name of the current process and thread.
+    If the process name is not "MainProcess" or the thread name is not "MainThread", it returns "threading" as the joblib backend to avoid possible PicklingError.
+    Otherwise, it returns None.
+
+    Returns:
+        str | None: The joblib backend to be used, or None if the default backend should be used.
+
+    """
+    from multiprocessing import current_process
+    from threading import current_thread
+
+    joblib_backend = None  # Default backend for joblib
+    if current_process().name != "MainProcess" or current_thread().name != "MainThread":
+        joblib_backend = "threading"  # If we are running in other than the main process or main thread, use threading instead of multiprocessing
+
+    return joblib_backend

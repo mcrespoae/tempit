@@ -18,7 +18,14 @@ pip install tempit
 
 ## Usage
 
-Tempit decorator should only be used for benchmarking; it is not intended for production code.
+`tempit` decorator should only be used for benchmarking and is not intended for production code. It is possible to deactivate the usage of `tempit` globally by setting the `TempitConfig.ACTIVE` flag to false as shown below:
+
+```python
+
+from tempit import TempitConfig, tempit
+TempitConfig.ACTIVE = False  # Deactivates the decorator
+
+```
 
 Below are some examples demonstrating `tempit`'s usage:
 
@@ -77,10 +84,11 @@ More examples can be found in the [examples.py](https://github.com/mcrespoae/tem
 
 - Simplified usage.
 - Accurate measurement of function execution time.
-- Support for functions, methods, `classmethod`, `staticmethods` and classes.
-- Parallel execution mode for performance measurement.
+- Support for functions, methods, `classmethod` and `staticmethods`.
 - Human-readable time formatting.
 - Optional verbose mode for detailed information.
+- Ability to globally deactivate the `tempit` decorator.
+- Parallel execution mode for performance measurement.
 - Automatic recursion checker.
 
 ## Parameters
@@ -102,7 +110,7 @@ The ideal way to use this package is by applying the decorator to the functions 
 
 - Recursive functions should be encapsulated for better benchmarking. Please refer to the [Recursive functions](#recursive-functions) section to to learn more about recursion and `tempit`.
 
-- Avoid decorating classes directly, as a `PicklingError` may occur if the class is then instantiated in another process. For more information, please see the [Decorating classes that could be instantiated in other processes](#decorating-classes-that-could-be-instantiated-in-other-processes) in the [Other Limitations](#other-limitations) section.
+- Decorating classes will return the class unmodified and will not be decorated. For more information about this decision, please see the [Why is class decoration bypassed](#why-is-class-decoration-bypassed) in the [Other Limitations](#other-limitations) section.
 
 ## Recursive functions
 
@@ -169,11 +177,13 @@ That being said, timings measured when using concurrent executions may not be as
 
 ## Other limitations
 
-### Decorating classes that could be instantiated in other processes
+While this package generally delivers excellent performance and reliability, it's essential to be aware of certain scenarios where using the `tempit` decorator could lead to unexpected behavior.
 
-While this package generally delivers excellent performance and reliability, it's essential to be aware of certain scenarios where using the `tempit` decorator could lead to unexpected behavior or crashes:
+### Why is class decoration bypassed?
 
-- If a class is decorated with `tempit`, and subsequently, a new process is spawned after creating an instance of the class, calling a method within the newly created process may result in a `PicklingError`.
+When a class is decorated using `tempit`, it remains unmodified and is not decorated. If the user intends to measure the time of `__self__` or any other constructor, it can be done directly on those methods.
+
+This design decision was made due to a potential issue that arises when a decorated class is used in conjunction with spawning a new process. Specifically, if a class decorated with `tempit` is pickled for use in a separate process and then a method is called within that new process, it may result in a `PicklingError`.
 
 This limitation arises due to how Python's pickling mechanism handles decorated classes and processes. When a decorated class instance is pickled for use in a separate process, inconsistencies in object references can occur, leading to pickling failures.
 
@@ -181,7 +191,7 @@ To mitigate this issue, avoid decorating classes that will be used in processes 
 
 ### Zero values
 
-In some rare cases where multiple recursively decorated functions are called nested within each other, `tempit` may return two values, with one being zero.
+In some rare cases where multiple recursively decorated functions are called nested within each other, `tempit` may return some zero values for the measurements of the inner functions.
 
 ## Error management and warnings
 
@@ -192,8 +202,6 @@ If an error occurs while executing the decorated function in sequential mode or 
 ### Warnings
 
 - Deprecation warnings will be added before removing a feature.
-
-- Decorated classes will raise a warning to inform the user about the potential issues described in [Decorating classes that could be instantiated in other processes](#decorating-classes-that-could-be-instantiated-in-other-processes) section.
 
 - If the `run_times` parameter exceeds `num_processors - 1`, it will be downsized to match the number of available processors minus one to maximize parallelization.
 
