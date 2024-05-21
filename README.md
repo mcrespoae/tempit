@@ -127,7 +127,7 @@ The auto-recursion feature detects recursion in the decorated function by checki
 This feature is intended for passive use in case the user forgets to encapsulate the recursive function or for non-accurate comparisons.
 
 ```python
-@tempit(run_times=3, concurrent_execution=True, verbose=False, check_for_recursion=True)
+@tempit(run_times=3, concurrent_execution=True, verbose=False)
 def recursive_func(n):
     if n == 0:
         return 0
@@ -135,7 +135,7 @@ def recursive_func(n):
         return n + recursive_func(n - 1)
 
 
-# Using the check_for_recursion parameter for the tempit decorator recursive function
+# This will trigger the auto-recursion feature
 result = recursive_func(3)
 ```
 
