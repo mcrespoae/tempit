@@ -99,7 +99,7 @@ def tempit(
                 with time_wasted_lock:  # Update the time non-ocurring in the function execution
                     end_time: float = time.perf_counter()
                     time_wasted += end_time - start_time
-                result: Any = run_func_recursive(func, *args, **kwargs)
+                result: Any = run_func_recursive(callable_func, *args, **kwargs)
                 potential_recursion_func_stack.pop()
                 return result
 
