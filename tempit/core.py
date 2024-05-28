@@ -47,6 +47,10 @@ def tempit(
         - If the function is a method, the first argument will be removed from `args_to_print`.
         - If the function is a class method, the first argument will be replaced with the class itself.
         - If the function is a static method, the first argument will be removed.
+        - Classes will be returned unmodified and will not be decorated.
+        - This decorator also checks for recursion automatically even though is better to wrap the recursive function in another function and apply the @measurit decorator to the new function.
+
+
 
     Example:
         @tempit(run_times=5, concurrent_execution=True, verbose=True)
@@ -156,10 +160,19 @@ def check_is_recursive_func(
     func: Callable, run_times: int, concurrent_execution: bool, potential_recursion_func_stack: deque[Callable]
 ) -> Tuple[int, bool, bool]:
     """
-    Checks if the function is being called recursively.
+    Checks if the function is being called recursively by checking the stack of called functions.
+    It will send a warning if the function is being called recursively.
+
+    Args:
+        func (Callable): The function to check for recursion.
+        run_times (int): The number of times the function should be executed.
+        concurrent_execution (bool): Indicates whether the function should be executed concurrently.
+        potential_recursion_func_stack (deque[Callable]): A stack of potential recursive functions.
     Returns:
-        Tuple[List[Callable], int, bool]: A tuple containing the potential recursive function stack to check if the function is being called recursively, None otherwise.
-        The second element is the run_times parameter, and the third element is a boolean indicating if concurrent_execution is enabled.
+        Tuple[int, bool, bool]: A tuple containing the updated run_times, concurrent_execution, and a boolean indicating if the function is recursive.
+            - run_times (int): The updated run_times parameter.
+            - concurrent_execution (bool): The updated concurrent_execution parameter.
+            - is_recursive (bool): A boolean indicating if the function is recursive.
     """
 
     if potential_recursion_func_stack and potential_recursion_func_stack[-1] == func:

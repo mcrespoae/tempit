@@ -1,5 +1,5 @@
 
-# Tempit
+# tempit
 
 ![PyPI](https://img.shields.io/pypi/v/tempit?label=pypi%20package)
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/tempit)
@@ -75,7 +75,7 @@ Function name: my_function_with_args
 
 More examples can be found in the [examples.py](https://github.com/mcrespoae/tempit/blob/main/examples/examples.py) script.
 
-### Timeit in production environments
+### Timeit in Production Environments
 
 The `tempit` decorator is designed **exclusively for benchmarking and is not suitable for use in production code**. You can globally deactivate the `tempit` feature by setting the `TempitConfig.ACTIVE` flag to false at the top of your imports. While this will skip the decoration of callables, there may still be a minimal CPU overhead. For production-grade applications, it's recommended to manually remove the decorators and `tempit` imports to maintain optimal performance.
 
@@ -93,7 +93,7 @@ TempitConfig.ACTIVE = False  # Deactivates the decorator
 - Optional verbose mode for detailed information.
 - Ability to globally deactivate the `tempit` decorator.
 - Parallel execution mode for performance measurement.
-- Automatic recursion checker.
+- Automatic recursion detection.
 
 ## Parameters
 
@@ -104,7 +104,7 @@ Using the decorator `@tempit` without any parameters executes the function once 
 - `verbose` (bool, optional): Controls whether detailed information is printed after execution. Defaults to False.
 - `check_for_recursion` ~~(bool, optional):~~ Will be **DEPRECRATED in v0.2.0**. ~~Checks for recursion in the decorated function~~. Please, read the [Recursive functions](#recursive-functions) for detailed information. Defaults to False.
 
-## Best practices
+## Best Practices
 
 The ideal way to use this package is by applying the decorator to the functions you want to measure and running them side by side to compare the results more easily.
 
@@ -116,11 +116,11 @@ The ideal way to use this package is by applying the decorator to the functions 
 
 - Decorating classes will return the class unmodified and will not be decorated. For more information about this decision, please see the [Why is class decoration bypassed](#why-is-class-decoration-bypassed) in the [Other Limitations](#other-limitations) section.
 
-## Recursive functions
+## Recursive Functions
 
 Measuring the execution time of recursive functions using decorators can be challenging due to potential verbosity in the output. This package offers an automatic recursion detection feature, but it is strongly recommended to use the [encapsulating the recursive function](#encapsulating-the-recursive-function) solution for cleaner, more precise, and safer results.
 
-### Using the auto recursion feature
+### Using the Auto-Recursion Feature
 
 The auto-recursion feature detects recursion in the decorated function by checking the parent call function. If recursion is found, it will only output the time taken to run the appropriate function, plus an overhead. It is not recommended to rely on this feature intentionally since the collected time data will not be accurate and the process will take longer.
 
@@ -139,7 +139,7 @@ def recursive_func(n):
 result = recursive_func(3)
 ```
 
-### Encapsulating the recursive function
+### Encapsulating the Recursive Function
 
 The recommended option is to encapsulate the recursive function within another function and then, decorate and call the parent function. Here's an example:
 
@@ -163,7 +163,7 @@ This approach enhances readability without incurring any performance penalties. 
 
 ## Concurrency
 
-### How concurrency works in timeit
+### How Concurrency Works in timeit
 
 `tempit` uses [joblib](https://pypi.org/project/joblib/) for parallel computing. By default, the execution backend is "loky". If a `PicklingError` occurs while trying to execute the decorated function, `tempit` switches the backend to "threading" and retries the execution. If any other error occurs with "loky" or "threading", `tempit` falls back to sequential execution, discarding the joblib option.
 
@@ -173,31 +173,27 @@ The number of workers for any parallel execution is `num_processors - 1`. While 
 
 Additionally, if the `run_times` parameter exceeds `num_processors - 1`, it will be downsized to match the number of available processors minus one to maximize parallelization. Finally, if `tempit` detects that it is running in concurrency mode and finds that the downsized `run_times` is equal to 1, `tempit` falls back to sequential execution, discarding the joblib option.
 
-### Concurrency caveats
+### Concurrency Caveats
 
 There are some caveats when using parallel computing. Creating a process or thread incurs overhead, so it's normal to find that for very low CPU-intensive functions, the concurrent mode may be slower than the sequential one. However, as the functions become more CPU-intensive, concurrency usually results in faster execution times.
 
 That being said, timings measured when using concurrent executions may not be as accurate as those in sequential mode.
 
-## Other limitations
+## Other Limitations
 
 While this package generally delivers excellent performance and reliability, it's essential to be aware of certain scenarios where using the `tempit` decorator could lead to unexpected behavior.
 
-### Why is class decoration bypassed?
+### Why is Class Decoration Bypassed?
 
-When a class is decorated using `tempit`, it remains unmodified and is not decorated. If the user intends to measure the time of `__self__` or any other constructor, it can be done directly on those methods.
+When a class is decorated using `tempit`, it remains unmodified and is not decorated. If the user intends to measure the time of `__init__` or any other constructor, it can be done directly on those methods.
 
 This design decision was made due to a potential issue that arises when a decorated class is used in conjunction with spawning a new process. Specifically, if a class decorated with `tempit` is pickled for use in a separate process and then a method is called within that new process, it may result in a `PicklingError`.
 
-This limitation arises due to how Python's pickling mechanism handles decorated classes and processes. When a decorated class instance is pickled for use in a separate process, inconsistencies in object references can occur, leading to pickling failures.
-
-To mitigate this issue, avoid decorating classes that will be used in processes spawned later in the program's execution.
-
-### Zero values
+### Zero Values
 
 In some rare cases where multiple recursively decorated functions are called nested within each other, `tempit` may return some zero values for the measurements of the inner functions.
 
-## Error management and warnings
+## Error Management and Warnings
 
 ### Errors
 
