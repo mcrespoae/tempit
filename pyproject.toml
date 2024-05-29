@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=70", "setuptools_scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tempit"
+dynamic = ["version"]
+description = "A dead simple time decorator"
+authors = [{name = "Mario Crespo", email = "info@mariocrespo.es"}]
+readme = "README.md"
+dependencies = ["joblib==1.4.2"]
+requires-python = ">= 3.8"
+
+license = {file = "LICENSE"}
+classifiers = [
+        "Development Status :: 5 - Production/Stable",
+        "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent",
+        "Intended Audience :: Developers",
+    ]
+
+[project.urls]
+Repository = "https://github.com/mcrespoae/tempit"
+
+
+[tool.setuptools_scm]
+version_scheme = "guess-next-dev"
+local_scheme = "no-local-version"
