@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "f62367be5090afdb305c432f1d23ca5d36019dacaef4a9ccede899e5b1a712b2"
+            "sha256": "008f4229f46994a4c154bb1356fd448d45d3d591ebacd2d98e5399358324896b"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -188,6 +188,15 @@
             "markers": "python_version >= '3.8'",
             "version": "==4.0.1"
         },
+        "joblib": {
+            "hashes": [
+                "sha256:06d478d5674cbc267e7496a410ee875abd68e4340feff4490bcb7afb88060ae6",
+                "sha256:2382c5816b2636fbd20a09e0f4e9dad4736765fdfb7dca582943b9c1366b3f0e"
+            ],
+            "index": "pypi",
+            "markers": "python_version >= '3.8'",
+            "version": "==1.4.2"
+        },
         "keyring": {
             "hashes": [
                 "sha256:2458681cdefc0dbc0b7eb6cf75d0b98e59f9ad9b2d4edd319d18f68bdca95e50",
@@ -330,6 +339,10 @@
             "index": "pypi",
             "markers": "python_version >= '3.8'",
             "version": "==8.1.0"
+        },
+        "tempit": {
+            "editable": true,
+            "file": "."
         },
         "twine": {
             "hashes": [
