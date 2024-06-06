@@ -75,6 +75,13 @@ Function name: my_function_with_args
 
 More examples can be found in the [examples.py](https://github.com/mcrespoae/tempit/blob/main/examples/examples.py) script.
 
+### Recommended Usage
+
+To accurately measure the performance of your functions using the `tempit` tool, follow these guidelines:
+
+- **Run Functions Multiple Times**: Set the `run_times` parameter to a value greater than 1 to obtain precise measurements. This is especially important for quick functions, as a single execution can be inaccurate due to measurement overhead. For very small functions, using 5 runs is a good rule of thumb. By default, `run_times` is set to 1, which is generally sufficient for time-consuming functions because their longer execution times are less prone to inaccuracies.
+- **Sequential Execution**: Set `concurrent_execution` to `False` for the most accurate measurements. This ensures each run is measured independently, avoiding the averaging effect of concurrent execution.
+
 ### Timeit in Production Environments
 
 The `tempit` decorator is designed **exclusively for benchmarking and is not suitable for use in production code**. You can globally deactivate the `tempit` feature by setting the `TempitConfig.ACTIVE` flag to false at the top of your imports. While this will skip the decoration of callables, there may still be a minimal CPU overhead. For production-grade applications, it's recommended to manually remove the decorators and `tempit` imports to maintain optimal performance.
@@ -102,7 +109,6 @@ Using the decorator `@tempit` without any parameters executes the function once 
 - `run_times` (int, optional): Specifies the number of function executions. Defaults to 1.
 - `concurrency_mode` (bool, optional): Determines the concurrency mode for the function execution. It uses [joblib](https://pypi.org/project/joblib/) for parallel computing. Defaults to True. **Will be changed to False as default in v.0.2.0**
 - `verbose` (bool, optional): Controls whether detailed information is printed after execution. Defaults to False.
-- `check_for_recursion` ~~(bool, optional):~~ Will be **DEPRECRATED in v0.2.0**. ~~Checks for recursion in the decorated function~~. Please, read the [Recursive functions](#recursive-functions) for detailed information. Defaults to False.
 
 ## Best Practices
 

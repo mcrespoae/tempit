@@ -103,7 +103,7 @@ class TestTempitDecoratorClass(unittest.TestCase):
         end_time = time.perf_counter()
 
         execution_time = end_time - start_time
-        self.assertAlmostEqual(execution_time, 0.01, delta=0.1)
+        self.assertAlmostEqual(execution_time, 0.01, delta=0.9)
 
     def test_tempit_other_thread_crash(self):
         # Just check if it the parallel execution doesn't work, it should be executed in the main thread

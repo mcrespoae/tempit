@@ -13,13 +13,7 @@ class TempitConfig:
     ACTIVE: bool = True
 
 
-def tempit(
-    *args: Any,
-    run_times: int = 1,
-    concurrent_execution: bool = True,
-    verbose: bool = False,
-    check_for_recursion: bool | None = None,
-) -> Callable:
+def tempit(*args: Any, run_times: int = 1, concurrent_execution: bool = False, verbose: bool = False) -> Callable:
     """
     Decorator function that measures the execution time of a given function. It can be called like @tempit or using arguments @tempit(...)
 
@@ -29,9 +23,8 @@ def tempit(
         concurrent_execution (bool, optional): This parameter will allow for the concurrent execution of the function using joblib.
                                                The default execution backend is "loky" but if the function is being triggered other than the main thread or main process, the backend will be changed to multithreading.
                                                If the execution of the concurrency fails, it will try to execute the func run_times non concurrently in the main process.
-                                               Defaults to True.
+                                               Defaults to False.
         verbose (bool, optional): Whether to print detailed information after execution. Defaults to False.
-        check_for_recursion (bool | None, optional): DEPRECATED. Whether to check if the function is being called recursively. Defaults to None.
 
     Returns:
         Callable: The decorated function if arguments are provided, otherwise a partial function.
@@ -49,8 +42,6 @@ def tempit(
         - If the function is a static method, the first argument will be removed.
         - Classes will be returned unmodified and will not be decorated.
         - This decorator also checks for recursion automatically even though is better to wrap the recursive function in another function and apply the @measurit decorator to the new function.
-
-
 
     Example:
         @tempit(run_times=5, concurrent_execution=True, verbose=True)
@@ -72,12 +63,8 @@ def tempit(
         else:
             return lambda f: f
 
-    if check_for_recursion is not None:
-        warning_msg = "check_for_recursion is deprecated and will be removed in future versions since it is not necessary anymore."
-        warnings.warn(warning_msg, DeprecationWarning, stacklevel=2)
-
     def decorator(
-        func: Callable, run_times: int = 1, concurrent_execution: bool = True, verbose: bool = False
+        func: Callable, run_times: int = 1, concurrent_execution: bool = False, verbose: bool = False
     ) -> Callable:
 
         if inspect.isclass(func):
