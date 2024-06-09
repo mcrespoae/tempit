@@ -31,3 +31,6 @@ env/
 # Ignore any cache directories
 .caches/
 .cache/
+
+# Ignore MacOs Files
+*.DS_Store
