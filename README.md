@@ -4,9 +4,11 @@
 ![PyPI](https://img.shields.io/pypi/v/tempit?label=pypi%20package)
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/tempit)
 
+`tempit` is a Python package designed to simplify the process of measuring the execution time of your functions through a straightforward decorator.
+
 ## Overview
 
-`tempit` is a Python package designed to simplify the process of measuring the execution time of your functions through a straightforward decorator.
+`tempit` offers a powerful and user-friendly decorator for performance analysis of Python functions. It allows for easy benchmarking, customizable measurement parameters, and detailed output for multiple runs and concurrent executions. With support for various function types and features like human-readable time formatting and automatic recursion detection, `tempit` is designed for efficient and accurate function performance measurement.
 
 ## Installation
 
