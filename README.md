@@ -8,7 +8,7 @@
 
 ## Overview
 
-`tempit` offers a powerful and user-friendly decorator for performance analysis of Python functions. It allows for easy benchmarking, customizable measurement parameters, and detailed output for multiple runs and concurrent executions. With support for various function types and features like human-readable time formatting and automatic recursion detection, `tempit` is designed for efficient and accurate function performance measurement.
+`tempit` offers a user-friendly decorator for measuring the execution time of Python functions. It simplifies benchmarking with customizable parameters and detailed output for multiple runs and concurrent executions. Supporting various function types, `tempit` includes features like human-readable time formatting and automatic recursion detection, ensuring precise and efficient timing measurements.
 
 ## Installation
 
