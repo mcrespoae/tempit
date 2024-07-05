@@ -8,7 +8,7 @@ joblib = "==1.4.2"
 
 [dev-packages]
 setuptools-scm = "==8.1.*"
-setuptools = "70.0.*"
+setuptools = "70.2.*"
 wheel = "==0.43.*"
 twine = "==5.1.*"
 build = "==1.2.*"

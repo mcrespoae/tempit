@@ -54,6 +54,7 @@ endif
 upload-pypi: clean install test build check
 # DEPRECATED
 # Instead use tags and the pypi_release.yml will upload the Github release and pypi
+# Push your changes to main
 # git tag 0.0.1 # or whatever version needed
 # git push origin --tags
 
