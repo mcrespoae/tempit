@@ -8,8 +8,8 @@ joblib = "==1.4.2"
 
 [dev-packages]
 setuptools-scm = "==8.1.*"
-setuptools = "70.2.*"
-wheel = "==0.43.*"
+setuptools = "75.*"
+wheel = "==0.44.*"
 twine = "==5.1.*"
 build = "==1.2.*"
 tempit = {file = ".", editable = true}
