@@ -50,7 +50,7 @@ It is possible to use [Parameters](#parameters) to customize the behavior of the
 
 ```python
 from tempit import tempit
-@tempit(run_times=20, concurrent_execution=True, verbose=True)
+@tempit(run_times=20, verbose=True)
 def my_function_with_args(a:int = 1, b:int = 2):
     return a + b
 
@@ -66,13 +66,13 @@ Function name: my_function_with_args
         Args: (1,)
         Kwargs: {'b': 2}
         Run times: 20
-        Mean: 0.7000µs
-        Median: 0.8000µs
-        Min: 0.4000µs
-        Max: 1.0000µs
-        Standard deviation: 0.2828µs
-        Sum time: 3.5000µs
-        Real time: 965.1000µs
+        Mean: 0.3500µs
+        Median: 0.3000µs
+        Min: 0.2000µs
+        Max: 0.8999µs
+        Standard deviation: 0.1792µs
+        Sum time: 6.9999µs
+        Real time: 14.4000µs
 ***** End of tempit data. *****
 ```
 
@@ -83,7 +83,7 @@ More examples can be found in the [examples.py](https://github.com/mcrespoae/tem
 To accurately measure the performance of your functions using the `tempit` tool, follow these guidelines:
 
 - **Run Functions Multiple Times**: Set the `run_times` parameter to a value greater than 1 to obtain precise measurements. This is especially important for quick functions, as a single execution can be inaccurate due to measurement overhead. For very small functions, using 5 runs is a good rule of thumb. By default, `run_times` is set to 1, which is generally sufficient for time-consuming functions because their longer execution times are less prone to inaccuracies.
-- **Sequential Execution**: Leave `concurrent_execution` at its default of `False` for the most accurate measurements. This ensures each run is measured independently, avoiding the averaging effect of concurrent execution.
+- **Sequential Execution**: Leave `concurrent_execution` at its default of `False` for the most accurate measurements. This ensures each run is measured independently, without runs competing for CPU resources (which distorts timings).
 
 ### tempit in Production Environments
 
@@ -104,6 +104,7 @@ TempitConfig.ACTIVE = False  # Deactivates the decorator
 - Ability to globally deactivate the `tempit` decorator.
 - Parallel execution mode for performance measurement.
 - Automatic recursion detection.
+- Fully type-hinted (PEP 561 `py.typed`) for static analysis and editor support.
 
 ## Parameters
 
@@ -206,7 +207,7 @@ In some rare cases where multiple recursively decorated functions are called nes
 
 ### Errors
 
-If an error occurs while executing the decorated function in sequential mode or within a recursively decorated function, the error will be propagated to the user's function.
+If an error occurs while executing the decorated function in sequential mode, in concurrent mode (which then falls back to sequential execution), or within a recursively decorated function, the error will be propagated to the caller.
 
 ### Warnings
 
@@ -234,6 +235,8 @@ You can test your code using `make test` (current interpreter) or `make test-all
 ## Testing
 
 The package has been thoroughly tested using unittesting. Test cases can be found in the [tests folder](https://github.com/mcrespoae/tempit/tree/main/tests).
+
+CI runs the suite across Python 3.11–3.14 on Linux, macOS and Windows, and reports code coverage.
 
 ## License
 
