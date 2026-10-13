@@ -125,26 +125,37 @@ def format_time(total_time: float) -> str:
     elif total_time < 60:
         return f"{total_time:.2f}s"
     elif total_time < 3600:
-        minutes = int(total_time // 60)
-        seconds = total_time % 60
-        ms = seconds % 1 * 1000
-        return f"{minutes:02}m:{seconds:02.0f}s.{ms:.0f}ms"
-    if total_time < 86400:
-        hours = int(total_time // 3600)
-        total_time %= 3600
-        minutes = int(total_time // 60)
-        seconds = total_time % 60
-        ms = seconds % 1 * 1000
-        return f"{hours:02}h:{minutes:02}m:{seconds:02.0f}s.{ms:.0f}ms"
+        minutes, seconds, milliseconds = _split_time(total_time, (60_000, 1000))
+        return f"{minutes:02}m:{seconds:02}s.{milliseconds}ms"
+    elif total_time < 86400:
+        hours, minutes, seconds, milliseconds = _split_time(total_time, (3_600_000, 60_000, 1000))
+        return f"{hours:02}h:{minutes:02}m:{seconds:02}s.{milliseconds}ms"
     else:
-        days = int(total_time // 86400)
-        total_time %= 86400
-        hours = int(total_time // 3600)
-        total_time %= 3600
-        minutes = int(total_time // 60)
-        seconds = total_time % 60
-        ms = seconds % 1 * 1000
-        return f"{days}d:{hours:02}h:{minutes:02}m:{seconds:02.0f}s.{ms:.0f}ms"
+        days, hours, minutes, seconds, milliseconds = _split_time(total_time, (86_400_000, 3_600_000, 60_000, 1000))
+        return f"{days}d:{hours:02}h:{minutes:02}m:{seconds:02}s.{milliseconds}ms"
+
+
+def _split_time(total_time: float, unit_milliseconds: Tuple[int, ...]) -> Tuple[int, ...]:
+    """
+    Split a duration (in seconds) into integer components, rounding to milliseconds.
+    Working from the total rounded milliseconds removes the overflow that rounding
+    the fractional part separately would produce (e.g. "60s" or "60m"). Carrying is
+    handled naturally by the successive divmods.
+
+    Args:
+        total_time (float): The duration in seconds.
+        unit_milliseconds (Tuple[int, ...]): Sizes in milliseconds of each component,
+            from largest to smallest (e.g. (60_000, 1000) for minutes, seconds, ms).
+    Returns:
+        Tuple[int, ...]: One component per unit, plus the remaining milliseconds.
+    """
+    remaining: int = round(total_time * 1000)
+    components: List[int] = []
+    for unit in unit_milliseconds:
+        value, remaining = divmod(remaining, unit)
+        components.append(value)
+    components.append(remaining)
+    return tuple(components)
 
 
 def show_error(e: Exception, filename: str = __file__) -> None:

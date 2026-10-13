@@ -178,7 +178,7 @@ def extract_callable_and_args_if_method(func: Callable, *args: Tuple) -> Tuple[C
 
     callable_func: Callable = func
     args_to_print: Tuple = args
-    is_method: bool = hasattr(args[0], func.__name__) if args else False
+    is_method: bool = bool(args) and is_bound_method_call(func, args[0])
 
     if is_method:
         args_to_print = args[1:]
@@ -188,6 +188,35 @@ def extract_callable_and_args_if_method(func: Callable, *args: Tuple) -> Tuple[C
         elif isinstance(func, staticmethod):
             args = args[1:]
     return callable_func, args, args_to_print
+
+
+def is_bound_method_call(func: Callable, first_arg: Any) -> bool:
+    """
+    Determine whether the first positional argument is the bound instance (or class)
+    of the decorated callable, meaning the callable is being used as a method.
+
+    A bare ``hasattr(first_arg, func.__name__)`` check is not reliable: any object
+    that happens to expose an attribute with the same name would be misclassified.
+    Here we additionally confirm that the attribute really is this decorated callable
+    (unwrapping bound methods and classmethod/staticmethod wrappers), so a same-named
+    unrelated attribute is not mistaken for a method binding.
+
+    Args:
+        func (Callable): The original callable passed to the decorator.
+        first_arg (Any): The first positional argument of the call.
+    Returns:
+        bool: True if the first argument binds to this decorated callable.
+    """
+    func_name = getattr(func, "__name__", None)
+    if func_name is None:
+        return False
+    attribute = getattr(first_arg, func_name, None)
+    if attribute is None:
+        return False
+    # Regular methods and classmethods accessed through an instance yield a bound
+    # method; unwrap it to reach the decorated wrapper.
+    candidate = getattr(attribute, "__func__", attribute)
+    return candidate is func or getattr(candidate, "__wrapped__", None) is func
 
 
 def function_execution(
@@ -296,29 +325,38 @@ def run_func_concurrency(func: Callable, run_times: int, *args: Tuple, **kwargs:
         raise RuntimeError("Run times=1 found while running in concurrency. Switching to sequential execution.")
 
     try:
-        start_time: float = time.perf_counter()
-        results: List[Tuple[Any, float, bool]] = Parallel(n_jobs=workers, backend=joblib_backend)(
-            delayed(func)(*args, **kwargs) for _ in range(run_times)
+        results: List[Tuple[Any, float]] = Parallel(n_jobs=workers, backend=joblib_backend)(
+            delayed(_timed_call)(func, args, kwargs) for _ in range(run_times)
         )  # type: ignore
-        end_time: float = time.perf_counter()
-
     except PicklingError:  # If a pickle error is raised, use threading instead of multiprocessing
         joblib_backend = "threading"
         try:
-            start_time: float = time.perf_counter()
-            results: List[Tuple[Any, float, bool]] = Parallel(n_jobs=workers, backend=joblib_backend, prefer="threads")(
-                delayed(func)(*args, **kwargs) for _ in range(run_times)
+            results = Parallel(n_jobs=workers, backend=joblib_backend, prefer="threads")(
+                delayed(_timed_call)(func, args, kwargs) for _ in range(run_times)
             )  # type: ignore
-            end_time: float = time.perf_counter()
         except Exception:
             raise RuntimeError(EXCEPTION_MSG)
 
     except Exception:
         raise RuntimeError(EXCEPTION_MSG)
 
-    average_runtimes: float = (end_time - start_time) / run_times
-    total_times: List[float] = [average_runtimes] * run_times
-    return results[0], total_times
+    # Each worker measured its own execution time, so the per-run values are real
+    # measurements instead of a single wall-clock average replicated run_times times.
+    total_times: List[float] = [elapsed for _, elapsed in results]
+    return results[0][0], total_times
+
+
+def _timed_call(func: Callable, args: Tuple, kwargs: Dict) -> Tuple[Any, float]:
+    """
+    Execute func and return its result together with the wall-clock time it took.
+
+    This is a module-level function so joblib can pickle it and send it to worker
+    processes/threads, where the timing happens locally to each run.
+    """
+    start_time: float = time.perf_counter()
+    result: Any = func(*args, **kwargs)
+    end_time: float = time.perf_counter()
+    return result, end_time - start_time
 
 
 def get_joblib_backend() -> str | None:

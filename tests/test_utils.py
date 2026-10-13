@@ -26,6 +26,17 @@ class TestFormatTime(unittest.TestCase):
     def test_format_time_days(self):
         self.assertEqual(format_time(86465.4321), "1d:00h:01m:05s.432ms")
 
+    def test_format_time_minutes_no_second_overflow(self):
+        # 119.6s is 1m 59.6s, not "01m:60s.600ms".
+        self.assertEqual(format_time(119.6), "01m:59s.600ms")
+
+    def test_format_time_hours_no_second_overflow(self):
+        self.assertEqual(format_time(3599.7), "59m:59s.700ms")
+
+    def test_format_time_rounds_milliseconds_up_with_carry(self):
+        # 119.9996s rounds to 120.000s, which must carry into the minutes.
+        self.assertEqual(format_time(119.9996), "02m:00s.0ms")
+
 
 class TestAdjustRunTimesForParallelism(unittest.TestCase):
     def setUp(self) -> None:

@@ -353,6 +353,41 @@ class TestTempitDecoratorFunction(unittest.TestCase):
         self.assertEqual(results, [0, 1, 2, 3])
         self.assertFalse(any("Recursive function detected" in str(w.message) for w in caught))
 
+    def test_run_func_concurrency_reports_per_run_times(self):
+        # Each concurrent run must report its own measured time, not a single
+        # wall-clock average replicated across every run (which would erase the
+        # min/max/median/stdev information shown in verbose mode).
+        if max(1, (cpu_count() or 1) - 1) < 2:
+            self.skipTest("Not enough CPU cores for concurrent execution")
+
+        def sleeper():
+            time.sleep(0.02)
+            return 42
+
+        result, total_times = run_func_concurrency(sleeper, 2)
+
+        self.assertEqual(result, 42)
+        self.assertEqual(len(total_times), 2)
+        for run_time in total_times:
+            # A replicated average of two parallel 20ms runs would be ~10ms.
+            self.assertGreaterEqual(run_time, 0.015)
+
+    def test_non_method_arg_with_matching_attribute_is_not_stripped(self):
+        # An argument that merely has an attribute with the function's name must
+        # not be stripped as if it were the `self` of a method.
+        @tempit(run_times=1, verbose=True)
+        def process(self):
+            return "ok"
+
+        class Fake:
+            process = 1
+
+        with capture_stdout() as captured:
+            result = process(Fake())
+
+        self.assertEqual(result, "ok")
+        self.assertIn("Args: (<", captured.getvalue())
+
     @unittest.skipUnless(not IN_GITHUB_ACTIONS, "Skip if running in GitHub Actions: too expensive.")
     def test_tempit_long_running_function(self):
         # Ensure the loky pool is already spawned before timing the concurrent call.
