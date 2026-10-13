@@ -41,7 +41,7 @@ def tempit(*args: Any, run_times: int = 1, concurrent_execution: bool = False, v
         - If the function is a class method, the first argument will be replaced with the class itself.
         - If the function is a static method, the first argument will be removed.
         - Classes will be returned unmodified and will not be decorated.
-        - This decorator also checks for recursion automatically even though is better to wrap the recursive function in another function and apply the @measurit decorator to the new function.
+        - This decorator also checks for recursion automatically even though is better to wrap the recursive function in another function and apply the @tempit decorator to the new function.
 
     Example:
         @tempit(run_times=5, concurrent_execution=True, verbose=True)

@@ -1,7 +1,8 @@
-# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# This workflow installs Python dependencies, runs lint and the test suite.
+# Lint runs once; tests run across every supported OS/Python combination.
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
 
-name: Python push to main - Run test and lint
+name: Python push to main - Run lint and tests
 
 on:
   push:
@@ -11,6 +12,7 @@ on:
       - "tests/**.py"
       - "pyproject.toml"
       - "uv.lock"
+      - ".flake8"
       - ".github/workflows/push_to_main.yml"
   pull_request:
     branches: [ "main" ]
@@ -19,27 +21,68 @@ on:
       - "tests/**.py"
       - "pyproject.toml"
       - "uv.lock"
+      - ".flake8"
       - ".github/workflows/push_to_main.yml"
 
 jobs:
-    build:
-      runs-on: ubuntu-latest
-      steps:
-        - name: Checkout repository
-          uses: actions/checkout@v7
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
 
-        - name: Install uv
-          uses: astral-sh/setup-uv@v10.3.0
-          with:
-            enable-cache: true
-            python-version: "3.14"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.3.0
+        with:
+          enable-cache: true
+          python-version: "3.14"
 
-        - name: Install dependencies
-          run: uv sync --frozen --group dev
+      - name: Install dependencies
+        run: uv sync --frozen --group dev
 
-        - name: flake8 Lint
-          run: uvx flake8 --ignore "F401,E402,E302,E305,E265,E701,F824" --exclude ".venv,.git,__pycache__,build,dist,examples/examples.py" --max-line-length 350
+      - name: flake8 Lint
+        run: uvx flake8
 
+  test:
+    needs: lint
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
 
-        - name: Run unittests
-          run: uv run python -m unittest discover -v -s ./tests -p "*test*.py"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.3.0
+        with:
+          enable-cache: true
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: uv sync --frozen --group dev
+
+      - name: Run unittests
+        if: matrix.os != 'ubuntu-latest' || matrix.python-version != '3.14'
+        run: uv run python -m unittest discover -v -s ./tests -p "*test*.py"
+
+      # Coverage is measured once (the fastest, most stable cell) to keep the
+      # matrix cheap; the other cells only assert correctness.
+      - name: Run unittests with coverage
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.14'
+        run: |
+          uv run coverage run --source=tempit -m unittest discover -s ./tests -p "*test*.py"
+          uv run coverage report -m
+
+      - name: Build coverage HTML report
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.14'
+        run: uv run coverage html
+
+      - name: Store coverage report
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.14'
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-report
+          path: htmlcov/

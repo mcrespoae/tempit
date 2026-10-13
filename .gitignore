@@ -32,5 +32,10 @@ env/
 .caches/
 .cache/
 
+# Coverage artifacts
+.coverage
+.coverage.*
+htmlcov/
+
 # Ignore MacOs Files
 *.DS_Store

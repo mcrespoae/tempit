@@ -35,7 +35,12 @@ dev = [
         "setuptools-scm>=10",
         "twine>=7",
         "build>=1.6",
+        "coverage>=7.6",
     ]
+
+
+[tool.setuptools.package-data]
+tempit = ["py.typed"]
 
 
 [tool.setuptools_scm]
