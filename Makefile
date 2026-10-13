@@ -1,39 +1,30 @@
 # Makefile
 # Check if the OS is Windows
 ifeq ($(OS),Windows_NT)
-	VENV_ACTIVATE = .venv\Scripts\activate &&
-	PYTHON = python
 	RM = del /Q
 	RMDIR = rmdir /S /Q
 
 else
-	VENV_ACTIVATE = . .venv/bin/activate &
-	PYTHON = python3
 	RM = rm -f
 	RMDIR = rm -rf
 
 endif
 
-.PHONY: install build example test clean upload_pypi upload-testpypi
+.PHONY: install build example test clean upload-pypi upload-testpypi
 
 
 install:
 	$(info Installing the repo)
-ifeq ($(OS),Windows_NT)
-	@if not exist .venv mkdir .venv
-else
-	@mkdir -p .venv
-endif
-	pipenv install -e . --dev
+	uv sync --group dev
 
 build:
-	$(VENV_ACTIVATE) $(PYTHON) -m build
+	uv build
 
 example:
-	$(VENV_ACTIVATE) $(PYTHON) examples/examples.py
+	uv run python examples/examples.py
 
 test:
-	$(VENV_ACTIVATE) $(PYTHON) -m unittest discover -v -s ./tests -p "*test*.py"
+	uv run python -m unittest discover -v -s ./tests -p "*test*.py"
 
 
 clean:
@@ -51,7 +42,7 @@ else
 
 endif
 
-upload-pypi: clean install test build check
+upload-pypi: clean install test build
 # DEPRECATED
 # Instead use tags and the pypi_release.yml will upload the Github release and pypi
 # Push your changes to main
@@ -59,14 +50,12 @@ upload-pypi: clean install test build check
 # git push origin --tags
 
 # Upload to PyPI. Make sure you have in your ~/.pypirc file in home directory
-	$(VENV_ACTIVATE) $(PYTHON) -m twine upload dist/*
+	uv run twine upload dist/*
 
-upload-testpypi: clean install test build check
+upload-testpypi: clean install test build
 # DEPRECATED
 
 # Upload to TestPyPI. Make sure you have in your ~/.pypirc file in home directory
-# Use $(PYTHON) -m pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ tempit
+# Use uv pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ tempit
 # for installing the testpypi version
-# or use pipenv install tempit -i https://test.pypi.org/simple
-	$(VENV_ACTIVATE) $(PYTHON) -m twine upload --repository testpypi dist/*
-
+	uv run twine upload --repository testpypi dist/*

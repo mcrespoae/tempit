@@ -8,6 +8,12 @@ IN_GITHUB_ACTIONS = os.getenv("GITHUB_ACTIONS") == "true"
 TempitConfig.ACTIVE = False
 
 
+def setUpModule():
+    # Keep the decorator deactivated for every test in this module regardless of
+    # the order the test modules are imported/run in.
+    TempitConfig.ACTIVE = False
+
+
 class TempitTestClassDeactivated:
 
     @tempit()
