@@ -13,7 +13,8 @@ on:
       - "pyproject.toml"
       - "uv.lock"
       - ".flake8"
-      - ".github/workflows/push_to_main.yml"
+      - ".github/workflows/**"
+      - "CHANGELOG.md"
   pull_request:
     branches: [ "main" ]
     paths:
@@ -22,7 +23,8 @@ on:
       - "pyproject.toml"
       - "uv.lock"
       - ".flake8"
-      - ".github/workflows/push_to_main.yml"
+      - ".github/workflows/**"
+      - "CHANGELOG.md"
 
 jobs:
   lint:
