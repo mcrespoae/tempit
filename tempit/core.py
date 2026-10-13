@@ -3,7 +3,7 @@ import time
 import warnings
 from collections import deque
 from functools import partial, wraps
-from threading import Lock
+from threading import local
 from typing import Any, Callable, Dict, List, Tuple
 
 from .utils import adjust_run_times_for_parallelism, print_tempit_values, show_error
@@ -68,55 +68,77 @@ def tempit(*args: Any, run_times: int = 1, concurrent_execution: bool = False, v
     ) -> Callable:
 
         if inspect.isclass(func):
-            # If a class is found, return the class inmediatly since it could raise an exception if triggered from other processes
+            # If a class is found, return the class immediately since it could raise an exception if triggered from other processes
             return func
 
-        potential_recursion_func_stack: deque[Callable] = deque()
-        is_recursive: bool = False
-        time_wasted_lock: Lock = Lock()
-        time_wasted: float = 0
+        # Per-thread call state. Each decorated function owns its own thread-local
+        # storage, so concurrent calls of the same function from different threads
+        # cannot corrupt each other's recursion stack or accumulated overhead and
+        # cannot be mistaken for recursion.
+        thread_local: local = local()
+
+        def get_stack() -> deque[Callable]:
+            stack = getattr(thread_local, "stack", None)
+            if stack is None:
+                stack = deque()
+                thread_local.stack = stack
+            return stack
+
+        def get_time_wasted() -> float:
+            return getattr(thread_local, "time_wasted", 0.0)
 
         @wraps(func)
         def tempit_wrapper(*args: Tuple, **kwargs: Dict) -> Any:
-            nonlocal potential_recursion_func_stack, is_recursive, time_wasted
-
+            stack: deque[Callable] = get_stack()
             start_time: float = time.perf_counter()
-            run_times_final, concurrent_execution_final, is_recursive = check_is_recursive_func(
-                func, run_times, concurrent_execution, potential_recursion_func_stack
-            )
-            callable_func, args, args_to_print = extract_callable_and_args_if_method(func, *args)
+
+            # The function is being called recursively if it is already the top of
+            # this function's call stack. Comparing object identity is very fast.
+            is_recursive: bool = bool(stack) and stack[-1] == func
+            stack.append(func)
 
             if is_recursive:  # If the function is recursive, it will be executed directly
-                with time_wasted_lock:  # Update the time non-ocurring in the function execution
-                    end_time: float = time.perf_counter()
-                    time_wasted += end_time - start_time
-                result: Any = run_func_recursive(callable_func, *args, **kwargs)
-                potential_recursion_func_stack.pop()
-                return result
+                warning_msg = "Recursive function detected. This process may be slow. Consider wrapping the recursive function in another function and applying the @tempit decorator to the new function."
+                warnings.warn(warning_msg, stacklevel=3)
+                # Accumulate the wrapper overhead that does not belong to the
+                # function execution; the outermost call subtracts it later.
+                thread_local.time_wasted = get_time_wasted() + (time.perf_counter() - start_time)
+                try:
+                    return run_func_recursive(func, *args, **kwargs)
+                finally:
+                    stack.pop()
 
-            result, total_times, real_time = function_execution(
-                callable_func,
-                run_times_final,
-                concurrent_execution_final,
-                *args,
-                **kwargs,
-            )
-
-            total_times: List[float] = update_total_times(total_times, time_wasted)
-
-            potential_recursion_func_stack.pop()
-            if not potential_recursion_func_stack:  # The function is not recursive at the moment, so it will be printed
-                print_tempit_values(
-                    run_times_final,
-                    verbose,
+            callable_func, args, args_to_print = extract_callable_and_args_if_method(func, *args)
+            try:
+                result, total_times, real_time = function_execution(
                     callable_func,
-                    total_times,
-                    real_time,
-                    *args_to_print,
+                    run_times,
+                    concurrent_execution,
+                    *args,
                     **kwargs,
                 )
 
-            return result
+                total_times = update_total_times(total_times, get_time_wasted())
+
+                if len(stack) == 1:  # The function is the outermost call, so it will be printed
+                    print_tempit_values(
+                        run_times,
+                        verbose,
+                        callable_func,
+                        total_times,
+                        real_time,
+                        *args_to_print,
+                        **kwargs,
+                    )
+
+                return result
+            finally:
+                # Always balance the stack, even when the user's function raises,
+                # so a failing call cannot poison the recursion detection of
+                # subsequent calls. Reset the overhead once the outermost call ends.
+                stack.pop()
+                if not stack:
+                    thread_local.time_wasted = 0.0
 
         return tempit_wrapper
 
@@ -141,35 +163,6 @@ def update_total_times(total_times: List[float], time_wasted: float) -> List[flo
     time_wasted_avg: float = time_wasted / len(total_times)
     # The max (x, 0) is due to the fact that the time wasted can be negative if we are analyzing a decorated function inside a decorated function
     return [max(x - time_wasted_avg, 0) for x in total_times]
-
-
-def check_is_recursive_func(
-    func: Callable, run_times: int, concurrent_execution: bool, potential_recursion_func_stack: deque[Callable]
-) -> Tuple[int, bool, bool]:
-    """
-    Checks if the function is being called recursively by checking the stack of called functions.
-    It will send a warning if the function is being called recursively.
-
-    Args:
-        func (Callable): The function to check for recursion.
-        run_times (int): The number of times the function should be executed.
-        concurrent_execution (bool): Indicates whether the function should be executed concurrently.
-        potential_recursion_func_stack (deque[Callable]): A stack of potential recursive functions.
-    Returns:
-        Tuple[int, bool, bool]: A tuple containing the updated run_times, concurrent_execution, and a boolean indicating if the function is recursive.
-            - run_times (int): The updated run_times parameter.
-            - concurrent_execution (bool): The updated concurrent_execution parameter.
-            - is_recursive (bool): A boolean indicating if the function is recursive.
-    """
-
-    if potential_recursion_func_stack and potential_recursion_func_stack[-1] == func:
-        potential_recursion_func_stack.append(func)
-        # Check if the function is being called recursively by checking the object identity. This is way faster than using getFrameInfo
-        warning_msg = "Recursive function detected. This process may be slow. Consider wrapping the recursive function in another function and applying the @tempit decorator to the new function."
-        warnings.warn(warning_msg, stacklevel=3)
-        return 1, False, True
-    potential_recursion_func_stack.append(func)
-    return run_times, concurrent_execution, False
 
 
 def extract_callable_and_args_if_method(func: Callable, *args: Tuple) -> Tuple[Callable, Tuple, Tuple]:
@@ -258,6 +251,7 @@ def run_func_sequential(func: Callable, run_times: int, *args: Tuple, **kwargs: 
     """
 
     total_times: List[float] = []
+    result: Any = None
     for _ in range(run_times):
         start_time: float = time.perf_counter()
         # Don't try to catch any errors here since the problem should be handled in the user's function

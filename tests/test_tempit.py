@@ -1,9 +1,11 @@
 import contextlib
 import io
 import os
+import re
 import threading
 import time
 import unittest
+import warnings
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from multiprocessing import current_process
 from os import cpu_count
@@ -293,6 +295,63 @@ class TestTempitDecoratorFunction(unittest.TestCase):
 
         result = my_function(7)
         self.assertEqual(result, 13)
+
+    def test_exception_does_not_poison_recursion_stack(self):
+        # A raising call must not leave the function on the recursion stack,
+        # otherwise every later call would be wrongly treated as recursive.
+        @tempit(run_times=1)
+        def my_function(x: int = 0):
+            if x == 1:
+                raise ValueError("boom")
+            return x
+
+        with self.assertRaises(ValueError):
+            my_function(1)
+
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            with capture_stdout() as captured:
+                result = my_function(2)
+
+        self.assertEqual(result, 2)
+        self.assertFalse(any("Recursive function detected" in str(w.message) for w in caught))
+        self.assertRegex(captured.getvalue(), r"Function my_function took ")
+
+    def test_time_wasted_resets_between_top_level_calls(self):
+        # The accumulated recursion overhead must be reset after the outermost
+        # call, otherwise subsequent calls report a bogus (zeroed) measurement.
+        @tempit(run_times=1, verbose=True)
+        def recursive_func(n: int = 0):
+            if n < 2:
+                return n
+            return recursive_func(n - 2) + recursive_func(n - 1)
+
+        for _ in range(2):
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                with capture_stdout() as captured:
+                    result = recursive_func(6)
+
+            self.assertEqual(result, 8)
+            match = re.search(r"Time: ([\d.]+)µs", captured.getvalue())
+            assert match is not None
+            self.assertGreater(float(match.group(1)), 0.0)
+
+    def test_concurrent_calls_do_not_falsely_detect_recursion(self):
+        # Calls of the same decorated function from different threads must not
+        # share the recursion stack, which would raise spurious warnings.
+        @tempit(run_times=1)
+        def slow_function(x: int = 0):
+            time.sleep(0.05)
+            return x
+
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            with capture_stdout(), ThreadPoolExecutor(max_workers=4) as executor:
+                results = list(executor.map(slow_function, range(4)))
+
+        self.assertEqual(results, [0, 1, 2, 3])
+        self.assertFalse(any("Recursive function detected" in str(w.message) for w in caught))
 
     @unittest.skipUnless(not IN_GITHUB_ACTIONS, "Skip if running in GitHub Actions: too expensive.")
     def test_tempit_long_running_function(self):
