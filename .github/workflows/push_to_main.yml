@@ -6,10 +6,20 @@ name: Python push to main - Run test and lint
 on:
   push:
     branches: [ "main" ]
-    paths: tempit/**.py
+    paths:
+      - "tempit/**.py"
+      - "tests/**.py"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".github/workflows/push_to_main.yml"
   pull_request:
     branches: [ "main" ]
-    paths: tempit/**.py
+    paths:
+      - "tempit/**.py"
+      - "tests/**.py"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".github/workflows/push_to_main.yml"
 
 jobs:
     build:
@@ -22,6 +32,7 @@ jobs:
           uses: astral-sh/setup-uv@v10
           with:
             enable-cache: true
+            python-version: "3.14"
 
         - name: Install dependencies
           run: uv sync --frozen --group dev

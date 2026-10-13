@@ -10,7 +10,7 @@ else
 
 endif
 
-.PHONY: install build example test clean upload-pypi upload-testpypi
+.PHONY: install build example test test-all clean upload-pypi upload-testpypi
 
 
 install:
@@ -25,6 +25,18 @@ example:
 
 test:
 	uv run python -m unittest discover -v -s ./tests -p "*test*.py"
+
+# Run the test suite across all supported Python versions (uv provisions any
+# missing interpreters). Each version runs in an isolated environment so the
+# main .venv is left untouched.
+# TODO: add Python 3.15 as soon as uv can provision the 3.15 GA interpreter
+# (as of 2026-10-13 uv only ships 3.15.0b3, a beta). Then enable:
+#	uv run --isolated --python 3.15 python -m unittest discover -s ./tests -p "*test*.py"
+test-all:
+	uv run --isolated --python 3.11 python -m unittest discover -s ./tests -p "*test*.py"
+	uv run --isolated --python 3.12 python -m unittest discover -s ./tests -p "*test*.py"
+	uv run --isolated --python 3.13 python -m unittest discover -s ./tests -p "*test*.py"
+	uv run --isolated --python 3.14 python -m unittest discover -s ./tests -p "*test*.py"
 
 
 clean:
