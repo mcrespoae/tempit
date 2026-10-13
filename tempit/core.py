@@ -205,7 +205,7 @@ def function_execution(
     Args:
         callable_func (Callable): The function to be executed.
         run_times (int): The number of times the function should be executed.
-        concurrency_mode (str): The concurrency mode for executing the function.
+        concurrent_execution (bool): Whether the function should be executed concurrently.
         *args (Tuple): The positional arguments to be passed to the function.
         **kwargs (Dict): The keyword arguments to be passed to the function.
     Returns:

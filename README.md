@@ -11,6 +11,8 @@
 
 ## Installation
 
+`tempit` requires Python 3.11 or newer.
+
 You can install `tempit` using pip:
 
 ```bash
@@ -81,9 +83,9 @@ More examples can be found in the [examples.py](https://github.com/mcrespoae/tem
 To accurately measure the performance of your functions using the `tempit` tool, follow these guidelines:
 
 - **Run Functions Multiple Times**: Set the `run_times` parameter to a value greater than 1 to obtain precise measurements. This is especially important for quick functions, as a single execution can be inaccurate due to measurement overhead. For very small functions, using 5 runs is a good rule of thumb. By default, `run_times` is set to 1, which is generally sufficient for time-consuming functions because their longer execution times are less prone to inaccuracies.
-- **Sequential Execution**: Set `concurrent_execution` to `False` for the most accurate measurements. This ensures each run is measured independently, avoiding the averaging effect of concurrent execution.
+- **Sequential Execution**: Leave `concurrent_execution` at its default of `False` for the most accurate measurements. This ensures each run is measured independently, avoiding the averaging effect of concurrent execution.
 
-### Timeit in Production Environments
+### tempit in Production Environments
 
 The `tempit` decorator is designed **exclusively for benchmarking and is not suitable for use in production code**. You can globally deactivate the `tempit` feature by setting the `TempitConfig.ACTIVE` flag to false at the top of your imports. While this will skip the decoration of callables, there may still be a minimal CPU overhead. For production-grade applications, it's recommended to manually remove the decorators and `tempit` imports to maintain optimal performance.
 
@@ -96,7 +98,7 @@ TempitConfig.ACTIVE = False  # Deactivates the decorator
 
 - Simplified usage.
 - Accurate measurement of function execution time.
-- Support for functions, methods, `classmethod` and `staticmethods`.
+- Support for functions, methods, `classmethod` and `staticmethod`.
 - Human-readable time formatting.
 - Optional verbose mode for detailed information.
 - Ability to globally deactivate the `tempit` decorator.
@@ -108,7 +110,7 @@ TempitConfig.ACTIVE = False  # Deactivates the decorator
 Using the decorator `@tempit` without any parameters executes the function once and displays the execution time. However, you can enhance the experience using the following arguments:
 
 - `run_times` (int, optional): Specifies the number of function executions. Defaults to 1.
-- `concurrency_mode` (bool, optional): Determines the concurrency mode for the function execution. It uses [joblib](https://pypi.org/project/joblib/) for parallel computing. Defaults to True. **Will be changed to False as default in v.0.2.0**
+- `concurrent_execution` (bool, optional): Determines whether the function is executed concurrently. It uses [joblib](https://pypi.org/project/joblib/) for parallel computing. Defaults to False.
 - `verbose` (bool, optional): Controls whether detailed information is printed after execution. Defaults to False.
 
 ## Best Practices
@@ -117,9 +119,9 @@ The ideal way to use this package is by applying the decorator to the functions 
 
 - If you want to measure several times to get an average, you can use the `run_times` parameter.
 
-- For more precise time execution, it is recommended to set `concurrency_mode` to `False`. Please see the [Concurrency](#concurrency) section to understand the limitations of concurrency.
+- For more precise time execution, it is recommended to keep `concurrent_execution` set to `False`. Please see the [Concurrency](#concurrency) section to understand the limitations of concurrency.
 
-- Recursive functions should be encapsulated for better benchmarking. Please refer to the [Recursive functions](#recursive-functions) section to to learn more about recursion and `tempit`.
+- Recursive functions should be encapsulated for better benchmarking. Please refer to the [Recursive functions](#recursive-functions) section to learn more about recursion and `tempit`.
 
 - Decorating classes will return the class unmodified and will not be decorated. For more information about this decision, please see the [Why is class decoration bypassed](#why-is-class-decoration-bypassed) in the [Other Limitations](#other-limitations) section.
 
@@ -170,7 +172,7 @@ This approach enhances readability without incurring any performance penalties. 
 
 ## Concurrency
 
-### How Concurrency Works in timeit
+### How Concurrency Works in tempit
 
 `tempit` uses [joblib](https://pypi.org/project/joblib/) for parallel computing. By default, the execution backend is "loky". If a `PicklingError` occurs while trying to execute the decorated function, `tempit` switches the backend to "threading" and retries the execution. If any other error occurs with "loky" or "threading", `tempit` falls back to sequential execution, discarding the joblib option.
 
@@ -227,7 +229,7 @@ Contributions are welcome! Please follow these guidelines when contributing:
 
 You can also open an issue if you find a bug or have a suggestion.
 
-You can test your code using `make test` and `make example` to trigger the examples. Please, check the [Makefile](https://github.com/mcrespoae/tempit/blob/main/Makefile) to know more about commands.
+You can test your code using `make test` (current interpreter) or `make test-all` (all supported Python versions), and `make example` to trigger the examples. Please, check the [Makefile](https://github.com/mcrespoae/tempit/blob/main/Makefile) to know more about commands.
 
 ## Testing
 
