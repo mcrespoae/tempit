@@ -1,7 +1,23 @@
+<div align="center">
 
-# tempit
+<img src=".github/assets/banner.svg" alt="tempit: a dead simple time decorator for Python" width="100%">
 
-![PyPI](https://img.shields.io/pypi/v/tempit?label=pypi%20package)
+**A dead simple time decorator for Python.**
+
+[![PyPI version](https://img.shields.io/pypi/v/tempit?style=flat-square&label=PyPI&color=3775A9)](https://pypi.org/project/tempit/)
+[![Python versions](https://img.shields.io/pypi/pyversions/tempit?style=flat-square&label=Python&color=3776AB)](https://pypi.org/project/tempit/)
+[![License: MIT](https://img.shields.io/pypi/l/tempit?style=flat-square&color=green)](LICENSE)
+[![Downloads per month](https://img.shields.io/pypi/dm/tempit?style=flat-square&label=Downloads%2Fmonth&color=orange)](https://pypi.org/project/tempit/)
+[![Development status](https://img.shields.io/pypi/status/tempit?style=flat-square&color=blue)](https://pypi.org/project/tempit/)
+
+[![Tests](https://github.com/mcrespoae/tempit/actions/workflows/push_to_main.yml/badge.svg)](https://github.com/mcrespoae/tempit/actions/workflows/push_to_main.yml)
+[![Release](https://github.com/mcrespoae/tempit/actions/workflows/pypi_release.yml/badge.svg)](https://github.com/mcrespoae/tempit/actions/workflows/pypi_release.yml)
+[![GitHub release](https://img.shields.io/github/v/release/mcrespoae/tempit?style=flat-square&color=blueviolet)](https://github.com/mcrespoae/tempit/releases)
+[![Last commit](https://img.shields.io/github/last-commit/mcrespoae/tempit?style=flat-square)](https://github.com/mcrespoae/tempit/commits/main)
+[![Open issues](https://img.shields.io/github/issues/mcrespoae/tempit?style=flat-square)](https://github.com/mcrespoae/tempit/issues)
+[![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://github.com/mcrespoae/tempit/pulls)
+
+</div>
 
 `tempit` is a Python package designed to simplify the process of measuring the execution time of your functions through a straightforward decorator.
 

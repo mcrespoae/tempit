@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 260" role="img" aria-label="tempit: a dead simple time decorator for Python">
+  <title>tempit</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0D1117"/>
+      <stop offset="1" stop-color="#161B22"/>
+    </linearGradient>
+    <linearGradient id="brand" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#2F81F7"/>
+      <stop offset="1" stop-color="#22D3EE"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.14" cy="0.5" r="0.6">
+      <stop offset="0" stop-color="#2F81F7" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#2F81F7" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1000" height="260" fill="url(#bg)"/>
+  <rect width="1000" height="260" fill="url(#glow)"/>
+  <rect x="0" y="0" width="1000" height="4" fill="url(#brand)"/>
+
+  <g opacity="0.5" fill="#30363D">
+    <circle cx="880" cy="60" r="2"/>
+    <circle cx="920" cy="90" r="2"/>
+    <circle cx="950" cy="55" r="2"/>
+    <circle cx="905" cy="140" r="2"/>
+    <circle cx="960" cy="120" r="2"/>
+    <circle cx="870" cy="110" r="2"/>
+  </g>
+
+  <g>
+    <circle cx="150" cy="138" r="70" fill="none" stroke="#1F6FEB" stroke-width="2" opacity="0.25"/>
+    <rect x="139" y="64" width="22" height="12" rx="4" fill="url(#brand)"/>
+    <line x1="150" y1="76" x2="150" y2="90" stroke="url(#brand)" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="150" cy="138" r="54" fill="#0D1117" stroke="url(#brand)" stroke-width="6"/>
+    <line x1="150" y1="138" x2="150" y2="104" stroke="#58A6FF" stroke-width="6" stroke-linecap="round"/>
+    <line x1="150" y1="138" x2="178" y2="150" stroke="#22D3EE" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="150" cy="138" r="6" fill="#58A6FF"/>
+  </g>
+
+  <text x="250" y="150" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="96" font-weight="800" letter-spacing="-2" fill="url(#brand)">tempit</text>
+  <text x="253" y="192" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="24" fill="#8B949E">A dead simple time decorator for Python.</text>
+  <text x="253" y="228" font-family="'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace" font-size="18" fill="#7EE787">@tempit &#8594; &lt;function&gt; took 0.35&#181;s</text>
+</svg>
